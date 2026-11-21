@@ -36,6 +36,7 @@
     <module>tools-time</module>
     <module>tools-xlsx</module>
     <module>tools-testkit</module>
+    <module>tools-guards</module>
   </modules>
 
   <properties>

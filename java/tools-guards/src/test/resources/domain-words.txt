@@ -1,0 +1,42 @@
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Drishti Tools. Proprietary: see LICENSE.
+# The words of a business domain no main source may hold (DomainWordsTest): unambiguous words only (not "book", "limit",
+# "position", "pack", which plain utilities use). A word in lower case matches in any case; one written with capitals matches as
+# written ("VaR", so Java's "var" is not a hit). The list only grows (ExemptionsOnlyShrinkTest counts it).
+trade
+trades
+trader
+traders
+trading
+counterparty
+counterparties
+portfolio
+portfolios
+VaR
+exposure
+exposures
+netting
+collateral
+desk
+desks
+notional
+pnl
+mtm
+frtb
+simm
+saccr
+xva
+cva
+isin
+cusip
+endur
+calypso
+murex
+swapone
+sutra
+sutras
+playground
+playgrounds
+capacity
+risk
+hedge
+derivative

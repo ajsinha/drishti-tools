@@ -1,0 +1,9 @@
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Drishti Tools. Proprietary: see LICENSE.
+# Each published module's dependencies outside test scope (DependenciesTest), group:artifact, or jdk-only for none. Test-scope
+# dependencies are free (JUnit, AssertJ; Apache POI is tools-xlsx's oracle, test scope only). A change here and in the POM go together.
+tools-concurrent jdk-only
+tools-net com.ash.tools:tools-settings
+tools-settings jdk-only
+tools-testkit jdk-only
+tools-time jdk-only
+tools-xlsx jdk-only
