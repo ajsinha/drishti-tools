@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.api.tls;
+package com.ash.tools.net;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -65,23 +65,31 @@ import javax.net.ssl.X509TrustManager;
  */
 public final class TlsContexts {
 
-    private static final System.Logger LOG = System.getLogger("com.ash.drishti.tls");
+    private static final System.Logger LOG = System.getLogger("com.ash.tools.net.tls");
 
     private TlsContexts() {}
 
     /** The SSL context, trust and key material {@code s} describes. */
     public static TlsMaterial build(TlsSettings s) {
-        return build(s, com.ash.drishti.settingsfile.Placeholders::process, Clock.systemUTC());
+        return build(s, com.ash.tools.settings.Placeholders::process, Clock.systemUTC());
     }
 
     /** As {@link #build(TlsSettings)}, reading environment variables through {@code env} and judging expiry by {@code clock}. */
     public static TlsMaterial build(TlsSettings s, Function<String, String> env, Clock clock) {
+        return build(s, env, clock, TlsSettings.ALLOW_INSECURE_ENV);
+    }
+
+    /**
+     * As {@link #build(TlsSettings, Function, Clock)}; {@code tls.insecure-trust-all} is accepted only when the environment variable
+     * {@code allowInsecureVariable} (the host's own name) is {@code true}.
+     */
+    public static TlsMaterial build(TlsSettings s, Function<String, String> env, Clock clock, String allowInsecureVariable) {
         List<String> warnings = new ArrayList<>();
         List<CertInfo> infos = new ArrayList<>();
         String p = s.prefix();
-        if (s.insecureTrustAll() && !"true".equalsIgnoreCase(env.apply(TlsSettings.ALLOW_INSECURE_ENV))) {
+        if (s.insecureTrustAll() && !"true".equalsIgnoreCase(env.apply(allowInsecureVariable))) {
             throw new TlsException(p + "insecure-trust-all is refused: it switches certificate checking off, so anyone on the network "
-                    + "can impersonate the server. For development only, start the server with " + TlsSettings.ALLOW_INSECURE_ENV + "=true");
+                    + "can impersonate the server. For development only, start the program with " + allowInsecureVariable + "=true");
         }
         if (s.keystore() != null && (s.certFile() != null || s.keyFile() != null)) {
             throw new TlsException(p + "keystore and " + p + "cert-file/" + p + "key-file both set: give the client identity one way");
@@ -218,7 +226,7 @@ public final class TlsContexts {
             return;
         }
         try {
-            byte[] challenge = "drishti-tls-check".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            byte[] challenge = "tls-key-check".getBytes(java.nio.charset.StandardCharsets.UTF_8);
             Signature sig = Signature.getInstance(alg);
             if ("RSASSA-PSS".equals(alg)) {
                 sig.setParameter(new java.security.spec.PSSParameterSpec("SHA-256", "MGF1",

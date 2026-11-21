@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,11 +13,11 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.api.proxy;
+package com.ash.tools.net;
 
-import com.ash.drishti.api.SettingSpec;
-import com.ash.drishti.api.tls.Secrets;
-import com.ash.drishti.api.tls.TlsException;
+import com.ash.tools.settings.SettingSpec;
+import com.ash.tools.settings.Secrets;
+import com.ash.tools.settings.SettingException;
 import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
@@ -36,8 +36,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * The outbound HTTP proxy of one connector, AI provider or MCP server: the one mechanism every HTTP client in Drishti shares,
- * next to {@link com.ash.drishti.api.tls.TlsSettings}.
+ * The outbound HTTP proxy of one connector, AI provider or MCP server: the one mechanism every HTTP client of the host shares,
+ * next to {@link com.ash.tools.net.TlsSettings}.
  *
  * <p>Keys (under {@code proxy.}; written as a {@code proxy:} block in the connector file):
  * <ul>
@@ -52,8 +52,8 @@ import java.util.function.Function;
  * {@code proxy: none} (the bare setting) switches it off for this connector whatever the site default says.
  *
  * <p>Where the effective proxy comes from, highest first: the connector's own {@code proxy:}; the site default
- * ({@link SiteProxy}, {@code drishti.http.proxy.*}); the standard {@code HTTPS_PROXY} / {@code HTTP_PROXY} / {@code NO_PROXY}
- * environment variables when the site asks for them ({@code drishti.http.proxy.from-environment}); none. {@link #source()} says
+ * ({@link SiteProxy}); the standard {@code HTTPS_PROXY} / {@code HTTP_PROXY} / {@code NO_PROXY}
+ * environment variables when the site asks for them (the site's from-environment setting); none. {@link #source()} says
  * which, and {@link #describe()} / {@link #note()} are the masked forms for health and the Admin pages (the password is never
  * in them, in {@link #toString()}, or in a log line).
  */
@@ -67,7 +67,7 @@ public final class ProxySettings {
         DISABLED("disabled by the connector"),
         /** The connector's own {@code proxy:} block. */
         CONNECTOR("connector"),
-        /** The site default ({@code drishti.proxy}). */
+        /** The site default ({@link SiteProxy}). */
         SITE("site default"),
         /** The {@code HTTPS_PROXY} / {@code HTTP_PROXY} environment variables. */
         ENVIRONMENT("environment");
@@ -115,7 +115,7 @@ public final class ProxySettings {
 
     /** The proxy for a connector whose target is {@code targetUrl} (null when not known), reading the process environment. */
     public static ProxySettings resolve(Map<String, String> settings, String targetUrl) {
-        return resolve(settings, targetUrl, com.ash.drishti.settingsfile.Placeholders::process);
+        return resolve(settings, targetUrl, com.ash.tools.settings.Placeholders::process);
     }
 
     /** The proxy for a connector whose target is {@code targetUrl}, reading environment variables through {@code env}. */
@@ -154,7 +154,7 @@ public final class ProxySettings {
             return NONE;
         }
         boolean connector = source == Source.CONNECTOR;
-        String where = connector ? "proxy." : "drishti.http.proxy.";
+        String where = connector ? "proxy." : SiteProxy.prefix();
         String enabled = get(settings, "proxy.enabled", env);
         if (enabled != null) {
             if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
@@ -176,7 +176,7 @@ public final class ProxySettings {
         String pw;
         try {
             pw = Secrets.secret(settings, "proxy.password", env);
-        } catch (TlsException e) {
+        } catch (SettingException e) {
             throw new ProxyException(e.getMessage());
         }
         if (uri.getRawUserInfo() != null) {
@@ -195,7 +195,7 @@ public final class ProxySettings {
     private static String get(Map<String, String> settings, String key, Function<String, String> env) {
         try {
             return Secrets.get(settings, key, env);
-        } catch (TlsException e) {
+        } catch (SettingException e) {
             throw new ProxyException(e.getMessage());
         }
     }
@@ -460,7 +460,7 @@ public final class ProxySettings {
     /**
      * The JDK refuses Basic proxy credentials for a {@code CONNECT} tunnel by default
      * ({@code jdk.http.auth.tunneling.disabledSchemes=Basic}), which would make every authenticated https target fail with 407.
-     * Drishti's proxy is a deliberate setting and Basic travels to a proxy the operator named, so the scheme is allowed unless the
+     * The host's proxy is a deliberate setting and Basic travels to a proxy the operator named, so the scheme is allowed unless the
      * operator set the property explicitly. It has to happen before the first JDK HTTP client is created; the server does it at
      * start.
      */
@@ -482,7 +482,7 @@ public final class ProxySettings {
         out.add(new SettingSpec("proxy", "string", false, null,
                 "Write 'proxy: none' to go direct for this connector even when the site has a default proxy; or use the proxy.* block", false, g));
         out.add(new SettingSpec("proxy.url", "string", false, null,
-                "Outbound HTTP proxy, http://host:port (https targets are tunnelled with CONNECT). Absent: the site default (drishti.http.proxy.*) applies", false, g));
+                "Outbound HTTP proxy, http://host:port (https targets are tunnelled with CONNECT). Absent: the site default (the site proxy) applies", false, g));
         out.add(new SettingSpec("proxy.username", "string", false, null, "Proxy user (Basic authentication)", false, g));
         out.add(new SettingSpec("proxy.password", "string", false, null,
                 "Proxy password: ${ENV} placeholder, or use proxy.password-file", true, g));

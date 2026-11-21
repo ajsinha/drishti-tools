@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,15 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.testkit;
+package com.ash.tools.net;
 
+import com.ash.tools.testkit.TestPki;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -138,12 +135,12 @@ class TlsContextsTest {
     void keystoresPkcs12AndJksLoadWithAliasAndKeyPassword(TestPki.KeyFormat ignored) throws Exception {
         for (String type : new String[] {"PKCS12", "JKS"}) {
             Path ks = dir.resolve("client." + type);
-            rsa.writeKeystore(ks, type, "storepw", "drishti", "storepw");
+            rsa.writeKeystore(ks, type, "storepw", "client", "storepw");
             // type given, type detected, alias given
             for (Map<String, String> m : new Map[] {
                     Map.of("tls.keystore", ks.toString(), "tls.keystore-password", "storepw", "tls.keystore-type", type),
                     Map.of("tls.keystore", ks.toString(), "tls.keystore-password", "storepw"),
-                    Map.of("tls.keystore", ks.toString(), "tls.keystore-password", "storepw", "tls.key-alias", "drishti")}) {
+                    Map.of("tls.keystore", ks.toString(), "tls.keystore-password", "storepw", "tls.key-alias", "client")}) {
                 TlsMaterial t = build(m);
                 assertThat(t.keyManagers()).isNotNull();
                 assertThat(t.clientChain()).hasSize(2);
@@ -230,10 +227,18 @@ class TlsContextsTest {
     @Test
     void trustAllIsRefusedUnlessTheEnvironmentAllowsIt() {
         TlsSettings s = settings(Map.of("tls.insecure-trust-all", "true"));
-        assertThatThrownBy(() -> TlsContexts.build(s, noEnv(), Clock.systemUTC())).isInstanceOf(TlsException.class)
-                .hasMessageContaining("insecure-trust-all is refused").hasMessageContaining("DRISHTI_ALLOW_INSECURE_TLS=true");
-        TlsMaterial t = TlsContexts.build(s, k -> "DRISHTI_ALLOW_INSECURE_TLS".equals(k) ? "true" : null, Clock.systemUTC());
+        assertThatThrownBy(() -> TlsContexts.build(s, noEnv(), Clock.systemUTC(), "APP_ALLOW_INSECURE_TLS")).isInstanceOf(TlsException.class)
+                .hasMessageContaining("insecure-trust-all is refused").hasMessageContaining("APP_ALLOW_INSECURE_TLS=true");
+        TlsMaterial t = TlsContexts.build(s, k -> "APP_ALLOW_INSECURE_TLS".equals(k) ? "true" : null, Clock.systemUTC(), "APP_ALLOW_INSECURE_TLS");
         assertThat(t.warnings()).anyMatch(w -> w.contains("insecure-trust-all is ON"));
+    }
+
+    @Test
+    void withoutAHostNameTheOptInVariableIsTheDefault() {
+        TlsSettings s = settings(Map.of("tls.insecure-trust-all", "true"));
+        assertThatThrownBy(() -> TlsContexts.build(s, noEnv(), Clock.systemUTC())).isInstanceOf(TlsException.class)
+                .hasMessageContaining(TlsSettings.ALLOW_INSECURE_ENV + "=true");
+        assertThat(TlsSettings.settingSpecs("tls.", "APP_ALLOW_INSECURE_TLS").getLast().description()).contains("APP_ALLOW_INSECURE_TLS=true");
     }
 
     // ---------------------------------------------------------------- passwords

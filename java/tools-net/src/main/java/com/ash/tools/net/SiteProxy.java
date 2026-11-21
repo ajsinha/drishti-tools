@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,12 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.api.proxy;
+package com.ash.tools.net;
 
 import java.util.Map;
 
 /**
- * The site-wide outbound proxy ({@code drishti.http.proxy.*} in {@code application.yaml}) that every HTTP-based connector, AI
+ * The site-wide outbound proxy (the host's site setting, handed over through {@link #configure}) that every HTTP-based connector, AI
  * provider and MCP client inherits unless it sets its own {@code proxy:} or {@code proxy: none}. The server hands it over once at
  * start (and again if the configuration is refreshed); {@link ProxySettings#resolve} reads it. The keys are the connector's,
  * under {@code proxy.} (url, username, password, no-proxy, enabled).
@@ -28,9 +28,12 @@ import java.util.Map;
  */
 public final class SiteProxy {
 
-    private record State(Map<String, String> settings, boolean fromEnvironment) {}
+    /** How a message names the site's proxy settings when the host has not named them ({@link #configure(Map, boolean, String)}). */
+    public static final String DEFAULT_PREFIX = "site proxy.";
 
-    private static volatile State state = new State(Map.of(), false);
+    private record State(Map<String, String> settings, boolean fromEnvironment, String prefix) {}
+
+    private static volatile State state = new State(Map.of(), false, DEFAULT_PREFIX);
 
     private SiteProxy() {}
 
@@ -41,17 +44,29 @@ public final class SiteProxy {
      * @param fromEnvironment honour {@code HTTPS_PROXY}, {@code HTTP_PROXY} and {@code NO_PROXY} when no proxy is configured
      */
     public static void configure(Map<String, String> settings, boolean fromEnvironment) {
-        state = new State(Map.copyOf(settings), fromEnvironment);
+        configure(settings, fromEnvironment, DEFAULT_PREFIX);
+    }
+
+    /**
+     * As {@link #configure(Map, boolean)}; {@code prefix} is how messages name the site's settings ({@code app.http.proxy.}), so an
+     * error points the operator at the host's own key.
+     */
+    public static void configure(Map<String, String> settings, boolean fromEnvironment, String prefix) {
+        state = new State(Map.copyOf(settings), fromEnvironment, prefix == null || prefix.isBlank() ? DEFAULT_PREFIX : prefix);
         ProxySettings.allowBasicThroughTunnels();
     }
 
     /** Back to no site default (tests). */
     public static void reset() {
-        state = new State(Map.of(), false);
+        state = new State(Map.of(), false, DEFAULT_PREFIX);
     }
 
     static Map<String, String> settings() {
         return state.settings();
+    }
+
+    static String prefix() {
+        return state.prefix();
     }
 
     static boolean fromEnvironment() {

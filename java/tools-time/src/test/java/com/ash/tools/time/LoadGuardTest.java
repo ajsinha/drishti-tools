@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.api;
+package com.ash.tools.time;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,7 +32,7 @@ class LoadGuardTest {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-01T03:00:00Z"), ZoneOffset.UTC);
 
     private static LoadGuard guard(String... args) {
-        return LoadGuard.fromArgs(args, Map.of(), CLOCK);
+        return LoadGuard.fromArgs(args, Map.of(), "APP_", CLOCK);
     }
 
     @Test
@@ -41,7 +41,10 @@ class LoadGuardTest {
         assertThat(g.today()).isEqualTo(LocalDate.of(2026, 9, 30));
         assertThat(g.latestAllowed()).isEqualTo(LocalDate.of(2026, 10, 1));
         assertThat(guard("--zone", "Asia/Tokyo").today()).isEqualTo(LocalDate.of(2026, 10, 1));
-        assertThat(LoadGuard.fromArgs(new String[0], Map.of("DRISHTI_BUSINESS_ZONE", "Asia/Tokyo"), CLOCK).today()).isEqualTo(LocalDate.of(2026, 10, 1));
+        assertThat(LoadGuard.fromArgs(new String[0], Map.of("APP_BUSINESS_ZONE", "Asia/Tokyo"), "APP_", CLOCK).today()).isEqualTo(LocalDate.of(2026, 10, 1));
+        assertThat(LoadGuard.fromArgs(new String[0], java.time.ZoneId.of("Asia/Tokyo"), CLOCK).today()).isEqualTo(LocalDate.of(2026, 10, 1));
+        assertThat(LoadGuard.fromArgs(new String[] {"--zone", "America/New_York"}, java.time.ZoneId.of("Asia/Tokyo"), CLOCK).today())
+                .as("--zone wins over the host's zone").isEqualTo(LocalDate.of(2026, 9, 30));
     }
 
     @Test

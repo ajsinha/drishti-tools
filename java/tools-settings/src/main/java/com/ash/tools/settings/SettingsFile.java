@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.settingsfile;
+package com.ash.tools.settings;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,25 +28,25 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * The optional settings files: {@code -Ddrishti.settings.file=/abs/base.ini[,/abs/secrets.ini,...]} on the command line (an IDE's VM
- * options, a JUnit run template, Maven's {@code -D}, surefire's argLine, {@code drishti.py --settings FILE start server}). The paths are never
+ * The optional settings files, named by a system property the caller chooses ({@code -Dapp.settings.file=/abs/base.ini[,/abs/secrets.ini,...]}
+ * on the command line: an IDE's VM options, a JUnit run template, Maven's {@code -D}, surefire's argLine). The paths are never
  * discovered: no environment search, no home folder, no working folder. A relative path is refused and a missing file is an error.
  *
- * <p>Format (docs/admin/CONFIGURATION.md, "The settings file"): one {@code key=value} per line; blank lines and lines starting with
- * {@code #} or {@code ;} are comments; the first {@code =} splits. A section whose name has a dot, {@code [lake.risk]},
- * {@code [pack.market-risk]}, {@code [connector.trade-murex]}, {@code [db.reporting]}, {@code [broker.kafka-eu]}, is a <b>namespace</b>:
- * its keys are prefixed with it ({@code root=/x} under {@code [lake.risk]} is {@code lake.risk.root}), so one lake, pack, connector,
- * database or broker never reads another's settings. A section without a dot ({@code [roots]}, {@code [server]}, {@code [global]}) is a
- * label only: its keys are full names ({@code drishti.data.dir}).
+ * <p>Format: one {@code key=value} per line; blank lines and lines starting with
+ * {@code #} or {@code ;} are comments; the first {@code =} splits. A section whose name has a dot, {@code [store.main]},
+ * {@code [connector.prices]}, {@code [db.reporting]}, is a <b>namespace</b>:
+ * its keys are prefixed with it ({@code root=/x} under {@code [store.main]} is {@code store.main.root}), so one store, connector or
+ * database never reads another's settings. A section without a dot ({@code [roots]}, {@code [server]}, {@code [global]}) is a
+ * label only: its keys are full names ({@code app.data.dir}).
  *
  * <p>Precedence: an explicit {@code -D} beats every file; among the files a later one beats an earlier one (a {@code secrets.ini} after a
- * {@code base.ini}). Every entry becomes a system property, so the one placeholder resolver ({@link Placeholders}) and Spring both see it.
+ * {@code base.ini}). Every entry becomes a system property, so the one placeholder resolver ({@link Placeholders}) and any framework see it.
  * {@link #sourceOf} names the file a key came from; {@link #isSecret} tells which values are never shown. Pure Java, no dependencies.
  */
 public final class SettingsFile {
 
-    /** The system property that names the files (one absolute path, or several separated by commas). */
-    public static final String PROPERTY = "drishti.settings.file";
+    /** The property named in messages before {@link #applyFrom} has run. */
+    private static final String UNNAMED = "the settings file property";
 
     /** A key whose value is never shown (logs, Admin, the resolved-paths view): a password, a secret, a token, a credential, a key. */
     private static final Pattern SECRET = Pattern.compile("(?i)(^|[._-])(password|passwd|passphrase|secret|secrets|token|credential|credentials|apikey|api-key|private-key|key)($|[._-])");
@@ -59,20 +59,33 @@ public final class SettingsFile {
     private static final Map<String, String> SET = Collections.synchronizedMap(new LinkedHashMap<>());
     /** The files read, in order. */
     private static final List<String> FILES = Collections.synchronizedList(new ArrayList<>());
+    /** The system property the files were named by (for messages); {@link #UNNAMED} until {@link #applyFrom} runs. */
+    private static volatile String property = UNNAMED;
 
     private SettingsFile() {
     }
 
     /**
-     * Applies the files named by {@link #PROPERTY}, if any, to the system properties and returns the keys they set, in order (empty when the
-     * property is absent, or when every entry was already set explicitly). A later file overrides an earlier one; an explicit {@code -D}
-     * (a property set before this ran) is never overwritten. Safe to call again. Call it first thing in {@code main}.
+     * Applies the files named by the system property {@code systemProperty} (one absolute path, or several separated by commas), if any,
+     * to the system properties and returns the keys they set, in order (empty when the property is absent, or when every entry was
+     * already set explicitly). A later file overrides an earlier one; an explicit {@code -D} (a property set before this ran) is never
+     * overwritten. Safe to call again. Call it first thing in {@code main}.
      *
      * @throws IllegalArgumentException when a path is relative
      * @throws IllegalStateException when a file is missing or unreadable, or a line is not key=value
      */
-    public static synchronized List<String> applyFromSystemProperty() {
-        String named = System.getProperty(PROPERTY);
+    public static List<String> applyFrom(String systemProperty) {
+        return applyFrom(systemProperty, null);
+    }
+
+    /**
+     * As {@link #applyFrom(String)}; in addition {@code ${homeProperty}} in a value is the install folder (a committed profile names
+     * folders under it), taken from the system property {@code homeProperty} or else the files' own entry, and resolved here, so a
+     * reader of the raw system property sees a real path. {@code homeProperty} null: no such substitution.
+     */
+    public static synchronized List<String> applyFrom(String systemProperty, String homeProperty) {
+        property = systemProperty;
+        String named = System.getProperty(systemProperty);
         List<String> set = new ArrayList<>();
         if (named == null || named.isBlank()) return set;
         Map<String, String> merged = new LinkedHashMap<>();
@@ -84,11 +97,9 @@ public final class SettingsFile {
                 from.put(e.getKey(), f);
             }
         }
-        // ${drishti.home} in a value is the install folder (a committed profile names folders under it: qa.ini's data folder), resolved
-        // here, so a reader of the raw system property sees a real path
-        String home = System.getProperty("drishti.home", merged.get("drishti.home"));
+        String home = homeProperty == null ? null : System.getProperty(homeProperty, merged.get(homeProperty));
         if (home != null && !home.isBlank()) {
-            merged.replaceAll((k, v) -> v == null ? null : v.replace("${drishti.home}", home.strip()));
+            merged.replaceAll((k, v) -> v == null ? null : v.replace("${" + homeProperty + "}", home.strip()));
         }
         for (Map.Entry<String, String> e : merged.entrySet()) {
             String k = e.getKey();
@@ -105,7 +116,12 @@ public final class SettingsFile {
         return set;
     }
 
-    /** The absolute paths named by a value of {@link #PROPERTY}, in order. */
+    /** The system property the files are named by, for messages ({@link #applyFrom}'s argument). */
+    public static String property() {
+        return property;
+    }
+
+    /** The absolute paths named by a value of the settings file property, in order. */
     public static List<String> files(String named) {
         List<String> out = new ArrayList<>();
         for (String part : named.split(",")) {
@@ -148,17 +164,17 @@ public final class SettingsFile {
     public static Map<String, String> read(String path) {
         Path file = Path.of(path);
         if (!file.isAbsolute()) {
-            throw new IllegalArgumentException(PROPERTY + " must name full absolute paths, got \"" + path
+            throw new IllegalArgumentException(property + " must name full absolute paths, got \"" + path
                     + "\" (a settings file is never searched for and never relative to the working folder)");
         }
         if (!Files.isRegularFile(file)) {
-            throw new IllegalStateException(PROPERTY + " names " + file + ", which is not a file");
+            throw new IllegalStateException(property + " names " + file + ", which is not a file");
         }
         List<String> lines;
         try {
             lines = Files.readAllLines(file, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new IllegalStateException(PROPERTY + ": cannot read " + file + ": " + e.getMessage(), e);
+            throw new IllegalStateException(property + ": cannot read " + file + ": " + e.getMessage(), e);
         }
         return parse(lines, file.toString());
     }
@@ -172,7 +188,7 @@ public final class SettingsFile {
             if (line.isEmpty() || line.startsWith("#") || line.startsWith(";")) continue;
             if (line.startsWith("[") && line.endsWith("]")) {
                 String section = line.substring(1, line.length() - 1).strip();
-                prefix = section.contains(".") ? section + "." : "";   // [lake.risk] is a namespace; [roots] a label
+                prefix = section.contains(".") ? section + "." : "";   // [store.main] is a namespace; [roots] a label
                 continue;
             }
             int eq = line.indexOf('=');
@@ -184,7 +200,7 @@ public final class SettingsFile {
         return out;
     }
 
-    /** The environment variable name of a key, as Spring reads it ({@code lake.risk.root} is {@code LAKE_RISK_ROOT}). */
+    /** The environment variable name of a key, the relaxed form frameworks read ({@code store.main.root} is {@code STORE_MAIN_ROOT}). */
     public static String envName(String key) {
         return key.toUpperCase(Locale.ROOT).replace('.', '_').replace('-', '_');
     }
@@ -194,5 +210,6 @@ public final class SettingsFile {
         SOURCES.clear();
         SET.clear();
         FILES.clear();
+        property = UNNAMED;
     }
 }

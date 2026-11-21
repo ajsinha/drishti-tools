@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.api.tls;
+package com.ash.tools.net;
 
 import java.net.Socket;
 import java.net.http.HttpClient;
@@ -28,7 +28,7 @@ import javax.net.ssl.X509ExtendedTrustManager;
 import javax.net.ssl.X509TrustManager;
 
 /**
- * The shared TLS material for a {@link HttpClient} (the JDK client the REST and feed connectors use).
+ * The shared TLS material for a {@link HttpClient} (the JDK's own HTTP client).
  *
  * <pre>{@code
  * HttpClient.Builder b = HttpClient.newBuilder();
@@ -49,12 +49,18 @@ public final class TlsHttp {
      * downgrade.
      */
     public static TlsMaterial material(java.util.Map<String, String> settings, String url, String urlSetting) {
-        return material(settings, url, urlSetting, com.ash.drishti.settingsfile.Placeholders::process);
+        return material(settings, url, urlSetting, com.ash.tools.settings.Placeholders::process);
     }
 
     /** As {@link #material(java.util.Map, String, String)}, reading environment variables through {@code env}. */
     public static TlsMaterial material(java.util.Map<String, String> settings, String url, String urlSetting,
             java.util.function.Function<String, String> env) {
+        return material(settings, url, urlSetting, env, TlsSettings.ALLOW_INSECURE_ENV);
+    }
+
+    /** As {@link #material(java.util.Map, String, String, java.util.function.Function)}, naming the host's opt-in variable for insecure TLS. */
+    public static TlsMaterial material(java.util.Map<String, String> settings, String url, String urlSetting,
+            java.util.function.Function<String, String> env, String allowInsecureVariable) {
         TlsSettings ts = TlsSettings.parse(settings, "tls.", env);
         boolean https = url != null && url.regionMatches(true, 0, "https://", 0, 8);
         if (!https) {
@@ -66,7 +72,7 @@ public final class TlsHttp {
             }
             return null;
         }
-        return TlsContexts.build(ts, env, java.time.Clock.systemUTC());
+        return TlsContexts.build(ts, env, java.time.Clock.systemUTC(), allowInsecureVariable);
     }
 
     /** Gives the builder the context (trust, client identity), the protocols and the cipher suites of {@code m}. */

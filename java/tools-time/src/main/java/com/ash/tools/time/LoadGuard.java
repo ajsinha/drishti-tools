@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.api;
+package com.ash.tools.time;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -27,17 +27,17 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * What every loader checks before it writes or drops a business day, so that one mis-dated row cannot wipe a store's
- * history (shared by the loaders of the dated connectors: PostgreSQL, DuckDB, MongoDB, Redis, Iceberg, Aerospike and
- * the JSON-lines files):
+ * history (shared by every loader that writes dated data: databases, table formats, plain files):
  *
  * <ul>
  *   <li><b>No business date in the future.</b> A row dated after today plus {@code --future-days} (1: tomorrow) in the
- *       business zone ({@code --zone}, else {@code DRISHTI_BUSINESS_ZONE}, else {@code America/New_York}) is quarantined:
+ *       business zone ({@code --zone}, else the host's business zone (a setting, or the variable {@code <PREFIX>BUSINESS_ZONE}), else
+ *       {@code America/New_York}) is quarantined:
  *       it is not written, the first few are named on standard error, and the load ends with an error once the rows
  *       that are good are in ({@link #finish()}).</li>
  *   <li><b>Retention counts back from the newest business date of the load.</b> A retention cut-off ({@code --keep-days},
  *       {@code --keep-months}, {@code --ttl-days}) is computed from the newest business date the load wrote (a plain
- *       file's date, a tar's newest folder: DATA_LAKE_GUIDE.md), never from the newest date the store holds; a run that
+ *       file's date, a tar's newest folder), never from the newest date the store holds; a run that
  *       writes no row counts from today in the business zone (a maintenance run: its own {@code --as-of}).</li>
  *   <li><b>No mass drop by accident.</b> A run that would drop more than {@code --max-drop-share} (0.5) of a table's
  *       data refuses to drop anything unless {@code --force-drop} is given ({@link #checkDrop}).</li>
@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class LoadGuard {
 
-    /** The business zone when neither {@code --zone} nor {@code DRISHTI_BUSINESS_ZONE} names one. */
+    /** The business zone when neither {@code --zone} nor the host names one. */
     public static final String DEFAULT_ZONE = "America/New_York";
     /** Rows named on standard error before the rest are only counted. */
     private static final int EXAMPLES = 10;
@@ -92,14 +92,33 @@ public final class LoadGuard {
      * The guard a loader's command line asks for: {@code --zone Z}, {@code --as-of yyyy-MM-dd}, {@code --future-days N},
      * {@code --max-drop-share F}, {@code --force-drop}; anything else is the loader's own.
      */
-    public static LoadGuard fromArgs(String[] args) {
-        return fromArgs(args, System.getenv(), Clock.systemUTC());
+    public static LoadGuard fromArgs(String[] args, ZoneId businessZone) {
+        return fromArgs(args, businessZone, Clock.systemUTC());
     }
 
-    static LoadGuard fromArgs(String[] args, Map<String, String> env, Clock clock) {
-        String zone = value(args, "--zone", env.getOrDefault("DRISHTI_BUSINESS_ZONE", ""));
+    /** As {@link #fromArgs(String[], ZoneId)}, judging today by {@code clock}. */
+    public static LoadGuard fromArgs(String[] args, ZoneId businessZone, Clock clock) {
+        return build(args, businessZone, clock);
+    }
+
+    /**
+     * As {@link #fromArgs(String[], ZoneId)}, the business zone read from the process environment's {@code <envPrefix>BUSINESS_ZONE}
+     * ({@code APP_} gives {@code APP_BUSINESS_ZONE}), else {@link #DEFAULT_ZONE}.
+     */
+    public static LoadGuard fromArgs(String[] args, String envPrefix) {
+        return fromArgs(args, System.getenv(), envPrefix, Clock.systemUTC());
+    }
+
+    /** As {@link #fromArgs(String[], String)}, reading {@code env} and judging today by {@code clock}. */
+    public static LoadGuard fromArgs(String[] args, Map<String, String> env, String envPrefix, Clock clock) {
+        String zone = env.getOrDefault(envPrefix + "BUSINESS_ZONE", "");
+        return build(args, zone.isBlank() ? ZoneId.of(DEFAULT_ZONE) : ZoneId.of(zone), clock);
+    }
+
+    private static LoadGuard build(String[] args, ZoneId businessZone, Clock clock) {
+        String zone = value(args, "--zone", "");
         String asOf = value(args, "--as-of", "");
-        return new LoadGuard(ZoneId.of(zone.isBlank() ? DEFAULT_ZONE : zone), clock, asOf.isBlank() ? null : LocalDate.parse(asOf),
+        return new LoadGuard(zone.isBlank() ? (businessZone == null ? ZoneId.of(DEFAULT_ZONE) : businessZone) : ZoneId.of(zone), clock, asOf.isBlank() ? null : LocalDate.parse(asOf),
                 Integer.parseInt(value(args, "--future-days", "1")), Double.parseDouble(value(args, "--max-drop-share", "0.5")),
                 List.of(args).contains("--force-drop"));
     }

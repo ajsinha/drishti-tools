@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.api.tls;
+package com.ash.tools.settings;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,12 +23,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Reads connector settings that may hold a secret: a value written as {@code ${ENV_NAME}} (or {@code ${ENV_NAME:default}}) is
+ * Reads settings that may hold a secret: a value written as {@code ${ENV_NAME}} (or {@code ${ENV_NAME:default}}) is
  * read from the environment, and a secret {@code x} may instead be given as {@code x-file} (the path of a file whose first
  * line is the secret, e.g. a mounted secret). A secret is never written in a document.
  */
 public final class Secrets {
-
 
     private Secrets() {}
 
@@ -53,7 +52,13 @@ public final class Secrets {
         return secret(k -> get(settings, k, env), "", key);
     }
 
-    static String secret(Function<String, String> get, String prefix, String key) {
+    /**
+     * The secret under {@code key} read through {@code get}: its {@code key-file} twin if given (the first line of that file), else the
+     * value; {@code prefix} names the settings' prefix in a message.
+     *
+     * @throws SettingException when the file cannot be read
+     */
+    public static String secret(Function<String, String> get, String prefix, String key) {
         String file = get.apply(key + "-file");
         if (file != null) {
             Path p = Path.of(file);
@@ -62,7 +67,7 @@ public final class Secrets {
                 int nl = text.indexOf('\n');
                 return (nl < 0 ? text : text.substring(0, nl)).stripTrailing();
             } catch (IOException e) {
-                throw new TlsException(prefix + key + "-file '" + file + "': cannot read the password file ("
+                throw new SettingException(prefix + key + "-file '" + file + "': cannot read the password file ("
                         + (Files.exists(p) ? e.getMessage() : "file not found") + ")", e);
             }
         }
@@ -70,15 +75,17 @@ public final class Secrets {
     }
 
     /**
-     * Every {@code ${NAME}} or {@code ${NAME:default}} in the value, through the one resolver (com.ash.drishti.settingsfile.Placeholders): a
-     * {@code -D}, the settings files, the environment, then or {@code env} when given (an empty value is unset); a reference with no value and no default
-     * is refused, naming it.
+     * Every {@code ${NAME}} or {@code ${NAME:default}} in the value, through the one resolver ({@link Placeholders}): a
+     * {@code -D}, the settings files, the environment, or {@code env} when given (an empty value is unset); a reference with no value
+     * and no default is refused, naming {@code key}.
+     *
+     * @throws SettingException naming the setting and the reference
      */
-    static String expand(String value, Function<String, String> env, String key) {
+    public static String expand(String value, Function<String, String> env, String key) {
         try {
-            return com.ash.drishti.settingsfile.Placeholders.require(value, env);   // env null: the process
+            return Placeholders.require(value, env);   // env null: the process
         } catch (IllegalArgumentException e) {
-            throw new TlsException(key + ": " + e.getMessage());
+            throw new SettingException(key + ": " + e.getMessage(), e);
         }
     }
 }

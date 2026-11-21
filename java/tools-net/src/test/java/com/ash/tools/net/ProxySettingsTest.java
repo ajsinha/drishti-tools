@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,15 +13,11 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.testkit;
+package com.ash.tools.net;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.proxy.NoProxy;
-import com.ash.drishti.api.proxy.ProxyException;
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.proxy.SiteProxy;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;

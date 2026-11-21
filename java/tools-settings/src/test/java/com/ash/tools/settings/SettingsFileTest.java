@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.settingsfile;
+package com.ash.tools.settings;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,23 +26,25 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SettingsFileTest {
 
+    private static final String PROPERTY = "tools.test.settings.file";
+
     @AfterEach
     void clean() {
-        for (String k : new String[] {SettingsFile.PROPERTY, "sf.test.a", "sf.test.b", "sf.test.c", "lake.risk.root", "lake.trading.root",
-                "db.reporting.url", "db.reporting.password", "connector.trade-murex.lake"}) System.clearProperty(k);
+        for (String k : new String[] {PROPERTY, "sf.test.a", "sf.test.b", "sf.test.c", "lake.risk.root", "lake.trading.root",
+                "db.reporting.url", "db.reporting.password", "connector.prices-feed.lake"}) System.clearProperty(k);
         SettingsFile.reset();
     }
 
     private Path write(Path dir, String text) throws Exception {
-        Path f = dir.resolve("drishti.ini");
+        Path f = dir.resolve("app.ini");
         Files.writeString(f, text);
         return f;
     }
 
     @Test
     void entriesBecomePropertiesAndSectionsAndCommentsAreIgnored(@TempDir Path dir) throws Exception {
-        System.setProperty(SettingsFile.PROPERTY, write(dir, "# a comment\n; another\n[paths]\nsf.test.a = /x/y\n\n[more]\nsf.test.b=1=2\n").toString());
-        assertThat(SettingsFile.applyFromSystemProperty()).containsExactly("sf.test.a", "sf.test.b");
+        System.setProperty(PROPERTY, write(dir, "# a comment\n; another\n[paths]\nsf.test.a = /x/y\n\n[more]\nsf.test.b=1=2\n").toString());
+        assertThat(SettingsFile.applyFrom(PROPERTY)).containsExactly("sf.test.a", "sf.test.b");
         assertThat(System.getProperty("sf.test.a")).isEqualTo("/x/y");
         assertThat(System.getProperty("sf.test.b")).as("the first = splits; the value keeps the rest").isEqualTo("1=2");
     }
@@ -50,30 +52,30 @@ class SettingsFileTest {
     @Test
     void anExplicitPropertyBeatsTheFile(@TempDir Path dir) throws Exception {
         System.setProperty("sf.test.a", "explicit");
-        System.setProperty(SettingsFile.PROPERTY, write(dir, "sf.test.a=fromfile\nsf.test.c=3\n").toString());
-        assertThat(SettingsFile.applyFromSystemProperty()).containsExactly("sf.test.c");
+        System.setProperty(PROPERTY, write(dir, "sf.test.a=fromfile\nsf.test.c=3\n").toString());
+        assertThat(SettingsFile.applyFrom(PROPERTY)).containsExactly("sf.test.c");
         assertThat(System.getProperty("sf.test.a")).isEqualTo("explicit");
         assertThat(System.getProperty("sf.test.c")).isEqualTo("3");
-        assertThat(SettingsFile.applyFromSystemProperty()).as("again: nothing left to set").isEmpty();
+        assertThat(SettingsFile.applyFrom(PROPERTY)).as("again: nothing left to set").isEmpty();
     }
 
     @Test
     void noPropertyMeansNothingIsLookedFor() {
-        assertThat(SettingsFile.applyFromSystemProperty()).isEmpty();
+        assertThat(SettingsFile.applyFrom(PROPERTY)).isEmpty();
     }
 
     @Test
     void aRelativePathIsRefused() {
-        System.setProperty(SettingsFile.PROPERTY, "drishti.ini");
-        assertThatThrownBy(SettingsFile::applyFromSystemProperty).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("absolute");
+        System.setProperty(PROPERTY, "app.ini");
+        assertThatThrownBy(() -> SettingsFile.applyFrom(PROPERTY)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("absolute");
     }
 
     @Test
     void aMissingFileAndABadLineAreClearErrors(@TempDir Path dir) throws Exception {
-        System.setProperty(SettingsFile.PROPERTY, dir.resolve("nope.ini").toString());
-        assertThatThrownBy(SettingsFile::applyFromSystemProperty).isInstanceOf(IllegalStateException.class).hasMessageContaining("not a file");
-        System.setProperty(SettingsFile.PROPERTY, write(dir, "no equals sign\n").toString());
-        assertThatThrownBy(SettingsFile::applyFromSystemProperty).isInstanceOf(IllegalStateException.class).hasMessageContaining(":1:");
+        System.setProperty(PROPERTY, dir.resolve("nope.ini").toString());
+        assertThatThrownBy(() -> SettingsFile.applyFrom(PROPERTY)).isInstanceOf(IllegalStateException.class).hasMessageContaining("not a file");
+        System.setProperty(PROPERTY, write(dir, "no equals sign\n").toString());
+        assertThatThrownBy(() -> SettingsFile.applyFrom(PROPERTY)).isInstanceOf(IllegalStateException.class).hasMessageContaining(":1:");
     }
 
     @Test
@@ -90,8 +92,8 @@ class SettingsFileTest {
         Files.writeString(base, "[db.reporting]\nurl=jdbc:postgresql://db/rep\npassword=changeme\n[lake.risk]\nroot=/a\n");
         Files.writeString(secrets, "[db.reporting]\npassword=s3cret\n");
         System.setProperty("lake.risk.root", "/explicit");
-        System.setProperty(SettingsFile.PROPERTY, base + " , " + secrets);
-        assertThat(SettingsFile.applyFromSystemProperty()).containsExactly("db.reporting.url", "db.reporting.password");
+        System.setProperty(PROPERTY, base + " , " + secrets);
+        assertThat(SettingsFile.applyFrom(PROPERTY)).containsExactly("db.reporting.url", "db.reporting.password");
         assertThat(System.getProperty("db.reporting.password")).isEqualTo("s3cret");
         assertThat(System.getProperty("lake.risk.root")).isEqualTo("/explicit");
         assertThat(SettingsFile.sourceOf("db.reporting.password")).isEqualTo(secrets.toString());
@@ -109,7 +111,21 @@ class SettingsFileTest {
 
     @Test
     void aRelativePathInAListIsRefused(@TempDir Path dir) throws Exception {
-        System.setProperty(SettingsFile.PROPERTY, write(dir, "a.b=1\n") + ",secrets.ini");
-        assertThatThrownBy(SettingsFile::applyFromSystemProperty).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("absolute");
+        System.setProperty(PROPERTY, write(dir, "a.b=1\n") + ",secrets.ini");
+        assertThatThrownBy(() -> SettingsFile.applyFrom(PROPERTY)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("absolute");
+    }
+
+    @Test
+    void theHomePropertyTheCallerNamesIsResolvedInValuesAndMessagesNameTheProperty(@TempDir Path dir) throws Exception {
+        System.setProperty(PROPERTY, write(dir, "sf.test.home=/opt/app\nsf.test.a=${sf.test.home}/data\n").toString());
+        try {
+            assertThat(SettingsFile.applyFrom(PROPERTY, "sf.test.home")).containsExactly("sf.test.home", "sf.test.a");
+            assertThat(System.getProperty("sf.test.a")).isEqualTo("/opt/app/data");
+            assertThat(SettingsFile.property()).isEqualTo(PROPERTY);
+        } finally {
+            System.clearProperty("sf.test.home");
+        }
+        System.setProperty(PROPERTY, "relative.ini");
+        assertThatThrownBy(() -> SettingsFile.applyFrom(PROPERTY)).hasMessageStartingWith(PROPERTY + " must name");
     }
 }

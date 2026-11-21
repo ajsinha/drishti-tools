@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,9 +13,11 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.api.tls;
+package com.ash.tools.net;
 
-import com.ash.drishti.api.SettingSpec;
+import com.ash.tools.settings.SettingException;
+import com.ash.tools.settings.SettingSpec;
+import com.ash.tools.settings.Secrets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +39,7 @@ import java.util.function.Function;
  *       (+ {@code keystore-type}, {@code key-alias}, {@code key-password}).
  *   <li>{@code protocols} (default {@code TLSv1.3,TLSv1.2}), {@code cipher-suites} (default: the JVM's),
  *       {@code verify-hostname} (default true), {@code insecure-trust-all} (development only; refused unless the environment
- *       variable {@code DRISHTI_ALLOW_INSECURE_TLS} is {@code true}).
+ *       variable the host names ({@link #ALLOW_INSECURE_ENV} by default) is {@code true}).
  * </ul>
  * A password is never written in a document: use a {@code ${ENV}} placeholder, or the {@code -file} twin of the key
  * ({@code keystore-password-file: /run/secrets/ks}), which reads the first line of the file.
@@ -66,8 +68,12 @@ public record TlsSettings(
 
     /** The protocols allowed when {@code tls.protocols} is not set: TLS 1.3 and 1.2. */
     public static final List<String> DEFAULT_PROTOCOLS = List.of("TLSv1.3", "TLSv1.2");
-    /** The environment variable that must be true for {@code tls.insecure-trust-all} to be accepted. */
-    public static final String ALLOW_INSECURE_ENV = "DRISHTI_ALLOW_INSECURE_TLS";
+    /**
+     * The environment variable that must be true for {@code tls.insecure-trust-all} to be accepted, when the host names none of its own
+     * (a host passes its own name to {@link TlsContexts#build(TlsSettings, Function, java.time.Clock, String)} and
+     * {@link #settingSpecs(String, String)}).
+     */
+    public static final String ALLOW_INSECURE_ENV = "ALLOW_INSECURE_TLS";
 
     /** TLS off. */
     public static TlsSettings disabled() {
@@ -81,11 +87,19 @@ public record TlsSettings(
 
     /** The settings under {@code prefix} ({@code tls.}), reading the process environment for placeholders. */
     public static TlsSettings parse(Map<String, String> settings, String prefix) {
-        return parse(settings, prefix, com.ash.drishti.settingsfile.Placeholders::process);
+        return parse(settings, prefix, com.ash.tools.settings.Placeholders::process);
     }
 
     /** As {@link #parse(Map, String)}, reading environment variables through {@code env}. */
     public static TlsSettings parse(Map<String, String> settings, String prefix, Function<String, String> env) {
+        try {
+            return read(settings, prefix, env);
+        } catch (SettingException e) {
+            throw new TlsException(e.getMessage(), e);              // a placeholder or a password file: a TLS setting that cannot be used
+        }
+    }
+
+    private static TlsSettings read(Map<String, String> settings, String prefix, Function<String, String> env) {
         Function<String, String> get = key -> {
             String v = settings.get(prefix + key);
             return v == null || v.isBlank() ? null : Secrets.expand(v.strip(), env, prefix + key);
@@ -110,6 +124,11 @@ public record TlsSettings(
      * the record's components). Passwords are secrets, each with its {@code -file} twin.
      */
     public static List<SettingSpec> settingSpecs(String prefix) {
+        return settingSpecs(prefix, ALLOW_INSECURE_ENV);
+    }
+
+    /** As {@link #settingSpecs(String)}, naming the host's own opt-in variable for {@code insecure-trust-all}. */
+    public static List<SettingSpec> settingSpecs(String prefix, String allowInsecureVariable) {
         String g = "tls";
         List<SettingSpec> out = new ArrayList<>();
         out.add(new SettingSpec(prefix + "enabled", "boolean", false, "false",
@@ -144,7 +163,7 @@ public record TlsSettings(
         out.add(new SettingSpec(prefix + "verify-hostname", "boolean", false, "true",
                 "Check the server's name against its certificate (false logs a warning at every start)", false, g));
         out.add(new SettingSpec(prefix + "insecure-trust-all", "boolean", false, "false",
-                "Do not check the server certificate; development only, refused unless DRISHTI_ALLOW_INSECURE_TLS=true", false, g));
+                "Do not check the server certificate; development only, refused unless " + allowInsecureVariable + "=true", false, g));
         return List.copyOf(out);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,13 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.testkit;
+package com.ash.tools.net;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.api.tls.Secrets;
-import com.ash.drishti.api.tls.TlsSettings;
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.tools.settings.Secrets;
+import com.ash.tools.settings.SettingsFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -32,6 +31,8 @@ import org.junit.jupiter.api.io.TempDir;
 /** A TLS secret written as a placeholder resolves a key of the settings files (the secrets file given second wins), and is masked. */
 class TlsSettingsFileTest {
 
+    private static final String PROPERTY = "tools.test.settings.file";
+
     @TempDir
     Path dir;
     private final List<String> set = new ArrayList<>();
@@ -39,20 +40,20 @@ class TlsSettingsFileTest {
     @AfterEach
     void clear() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(PROPERTY);
     }
 
     @Test
     void aTlsPasswordPlaceholderResolvesTheSecretsFilesKey() throws Exception {
         Path base = dir.resolve("prod.ini");
-        Files.writeString(base, "[site.tls]\ntruststore=/etc/drishti/tls/truststore.p12\ntruststore-password=from-base\n");
+        Files.writeString(base, "[site.tls]\ntruststore=/etc/app/tls/truststore.p12\ntruststore-password=from-base\n");
         Path secrets = dir.resolve("secrets.ini");
         Files.writeString(secrets, "[site.tls]\ntruststore-password=from-secrets\n");
-        System.setProperty(SettingsFile.PROPERTY, base + "," + secrets);
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(PROPERTY, base + "," + secrets);
+        set.addAll(SettingsFile.applyFrom(PROPERTY));
         Map<String, String> settings = Map.of("tls.truststore", "${site.tls.truststore}", "tls.truststore-password", "${site.tls.truststore-password}");
         TlsSettings t = TlsSettings.from(settings);
-        assertThat(t.truststore()).isEqualTo("/etc/drishti/tls/truststore.p12");
+        assertThat(t.truststore()).isEqualTo("/etc/app/tls/truststore.p12");
         assertThat(t.truststorePassword()).isEqualTo("from-secrets");
         assertThat(Secrets.secret(settings, "tls.truststore-password")).isEqualTo("from-secrets");
         assertThat(SettingsFile.sourceOf("site.tls.truststore-password")).isEqualTo(secrets.toString());

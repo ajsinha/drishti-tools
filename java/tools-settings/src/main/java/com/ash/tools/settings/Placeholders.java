@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,24 +13,23 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.settingsfile;
+package com.ash.tools.settings;
 
 import java.util.function.Function;
 
 /**
- * The one placeholder resolver of every file Drishti reads (docs/admin/CONFIGURATION.md, "Placeholders"): packs, connector templates
- * and site files, bindings, lakes, data loads, engines, modules, lenses, the UI kit, AI and MCP providers, the store and the network
- * files. {@code ${key}} or {@code ${key:default}} (also {@code ${key:-default}}), nested in the default ({@code ${a:${b:x}}}), resolves in
+ * The one placeholder resolver of every file a program reads (its configuration, its connector and network files).
+ * {@code ${key}} or {@code ${key:default}} (also {@code ${key:-default}}), nested in the default ({@code ${a:${b:x}}}), resolves in
  * this order:
  * <ol>
  *   <li>an explicit {@code -D} system property;</li>
- *   <li>the settings files ({@code -Ddrishti.settings.file}: their entries are system properties, a {@code -D} still wins);</li>
- *   <li>the environment: the key as written ({@code DRISHTI_DELTA_ROOT}), then its variable form ({@code lake.risk.root} is
- *       {@code LAKE_RISK_ROOT});</li>
+ *   <li>the settings files ({@link SettingsFile}: their entries are system properties, a {@code -D} still wins);</li>
+ *   <li>the environment: the key as written ({@code APP_DATA_ROOT}), then its variable form ({@code store.main.root} is
+ *       {@code STORE_MAIN_ROOT});</li>
  *   <li>the default; none: the reference stays as written ({@link #resolve}) or is an error ({@link #require}).</li>
  * </ol>
- * A reader inside the server passes the server's own view ({@code view}: its environment, which holds the system properties, the
- * settings files' entries and the environment in the same order, then its configuration files); a test passes a map. The view replaces
+ * A host passes its own view ({@code view}: its system properties, the settings files' entries and the environment in the same
+ * order, then its configuration files); a test passes a map. The view replaces
  * the process lookup; null means the process. A value that is not a placeholder is kept as written. Pure Java, no dependencies.
  */
 public final class Placeholders {
@@ -123,7 +122,7 @@ public final class Placeholders {
                 out.append(expand(def, more, strict, depth + 1, missing));
             } else if (strict) {
                 throw new IllegalArgumentException("the setting " + key + " is not set: give it with -D" + key + "=..., in the settings file ("
-                        + SettingsFile.PROPERTY + "), or as the environment variable " + SettingsFile.envName(key));
+                        + SettingsFile.property() + "), or as the environment variable " + SettingsFile.envName(key));
             } else if (missing != null) {
                 out.append(missing);
             } else {

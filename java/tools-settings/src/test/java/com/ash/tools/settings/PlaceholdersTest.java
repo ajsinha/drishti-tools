@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.settingsfile;
+package com.ash.tools.settings;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,10 +28,12 @@ import org.junit.jupiter.api.io.TempDir;
 /** The one placeholder resolver: -D, then the settings files, then the environment, then the caller's settings, then the default. */
 class PlaceholdersTest {
 
+    private static final String PROPERTY = "tools.test.settings.file";
+
     @AfterEach
     void clean() {
-        for (String k : new String[] {SettingsFile.PROPERTY, "PATH", "ph.a", "ph.b", "lake.risk.root", "lake.trading.root",
-                "pack.market-risk.lake", "pack.counterparty-risk.lake"}) System.clearProperty(k);
+        for (String k : new String[] {PROPERTY, "PATH", "ph.a", "ph.b", "lake.risk.root", "lake.trading.root",
+                "pack.pricing.lake", "pack.reporting.lake"}) System.clearProperty(k);
         SettingsFile.reset();
     }
 
@@ -60,8 +62,8 @@ class PlaceholdersTest {
         Path ini = dir.resolve("x.ini");
         Files.writeString(ini, "[global]\nPATH=/from/ini\nph.a=/from/ini/a\n");
         System.setProperty("ph.a", "/explicit");
-        System.setProperty(SettingsFile.PROPERTY, ini.toString());
-        SettingsFile.applyFromSystemProperty();
+        System.setProperty(PROPERTY, ini.toString());
+        SettingsFile.applyFrom(PROPERTY);
         assertThat(Placeholders.resolve("${PATH}")).as("the file beats the environment").isEqualTo("/from/ini");
         assertThat(Placeholders.resolve("${ph.a}")).as("-D beats the file").isEqualTo("/explicit");
     }
@@ -69,15 +71,15 @@ class PlaceholdersTest {
     @Test
     void twoPacksOnTwoLakesNeverMoveEachOther(@TempDir Path dir) throws Exception {
         Path ini = dir.resolve("lakes.ini");
-        Files.writeString(ini, "[lake.risk]\nroot=/lakes/risk\n[lake.trading]\nroot=/lakes/trading\n[pack.market-risk]\nlake=risk\n");
-        System.setProperty(SettingsFile.PROPERTY, ini.toString());
-        SettingsFile.applyFromSystemProperty();
+        Files.writeString(ini, "[lake.risk]\nroot=/lakes/risk\n[lake.trading]\nroot=/lakes/trading\n[pack.pricing]\nlake=risk\n");
+        System.setProperty(PROPERTY, ini.toString());
+        SettingsFile.applyFrom(PROPERTY);
         // a shipped template: its own namespaced key, then the named lake's root
-        Map<String, String> pack = Map.of("market-risk", "trading", "counterparty-risk", "trading");
+        Map<String, String> pack = Map.of("pricing", "trading", "reporting", "trading");
         for (String p : pack.keySet()) {
             String lake = Placeholders.resolve("${pack." + p + ".lake:" + pack.get(p) + "}");
             String root = Placeholders.resolve("${lake." + lake + ".root:/data/delta/" + lake + "}");
-            assertThat(root).isEqualTo(p.equals("market-risk") ? "/lakes/risk" : "/lakes/trading");
+            assertThat(root).isEqualTo(p.equals("pricing") ? "/lakes/risk" : "/lakes/trading");
         }
     }
 }

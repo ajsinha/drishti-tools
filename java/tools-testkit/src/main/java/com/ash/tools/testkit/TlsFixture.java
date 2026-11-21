@@ -1,5 +1,5 @@
 /*
- * Project Drishti · Any data. Any domain. One grammar.
+ * Tools · shared, domain-free Java utilities.
  *
  * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
  * All rights reserved.
@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.testkit;
+package com.ash.tools.testkit;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -37,18 +37,18 @@ public final class TlsFixture {
 
     public TlsFixture(long serverValidDays) {
         try {
-            dir = Files.createTempDirectory("drishti-tls");
-            ca = TestPki.ca("drishti-test-ca");
+            dir = Files.createTempDirectory("tls-fixture");
+            ca = TestPki.ca("test-ca");
             otherCa = TestPki.ca("some-other-ca");
             server = TestPki.issue(ca, "localhost", "RSA", serverValidDays);
-            client = TestPki.issue(ca, "drishti", "RSA", 20);       // inside the 30-day expiry warning
+            client = TestPki.issue(ca, "client", "RSA", 20);       // inside the 30-day expiry warning
             ca.writeCertPem(path("ca.pem"));
             otherCa.writeCertPem(path("other-ca.pem"));
             server.writeCertPem(path("server.pem"));
             server.writeKeyPem(path("server.key"), TestPki.KeyFormat.PKCS8, null);
             client.writeCertPem(path("client.pem"));
             client.writeKeyPem(path("client.key"), TestPki.KeyFormat.PKCS8, null);
-            client.writeKeystore(path("client.p12"), "PKCS12", "changeit", "drishti", "changeit");
+            client.writeKeystore(path("client.p12"), "PKCS12", "changeit", "client", "changeit");
             TestPki.writeTruststore(path("ca.p12"), "PKCS12", "changeit", ca.cert());
             server.writeKeystore(path("server.p12"), "PKCS12", "changeit", "server", "changeit");
         } catch (IOException e) {

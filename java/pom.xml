@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Drishti Tools · shared, domain-free Java utilities for the Drishti family.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.tools</groupId>
+    <artifactId>tools-bom</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>tools-bom/pom.xml</relativePath>
+  </parent>
+  <groupId>com.ash.tools</groupId>
+  <artifactId>tools-parent</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>Drishti Tools (reactor)</name>
+
+  <modules>
+    <module>tools-bom</module>
+    <module>tools-settings</module>
+    <module>tools-net</module>
+    <module>tools-concurrent</module>
+    <module>tools-time</module>
+    <module>tools-testkit</module>
+  </modules>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.outputTimestamp>2026-01-01T00:00:00Z</project.build.outputTimestamp>
+    <tools.test.forks>2</tools.test.forks>
+    <argLine></argLine>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- test scope only: never in tools-bom, never in a published module's compile or runtime class path -->
+      <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.12.2</version></dependency>
+      <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><version>3.27.7</version></dependency>
+      <!-- the xlsx oracle (TL-2): every workbook the writer makes is read back with Apache POI, in tools-xlsx's tests only -->
+      <dependency><groupId>org.apache.poi</groupId><artifactId>poi-ooxml</artifactId><version>5.4.1</version></dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin><artifactId>maven-compiler-plugin</artifactId><version>3.13.0</version></plugin>
+        <plugin><artifactId>maven-surefire-plugin</artifactId><version>3.5.2</version></plugin>
+        <plugin><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version></plugin>
+        <plugin><artifactId>maven-resources-plugin</artifactId><version>3.3.1</version></plugin>
+        <plugin><artifactId>maven-install-plugin</artifactId><version>3.1.3</version></plugin>
+        <plugin><artifactId>maven-enforcer-plugin</artifactId><version>3.5.0</version></plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerArgs><arg>-Xlint:all,-serial,-processing</arg></compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkCount>${tools.test.forks}</forkCount>
+          <reuseForks>true</reuseForks>
+          <!-- the test JVMs' temp folder is the module's target/tmp, never the system /tmp -->
+          <tempDir>tmp</tempDir>
+          <argLine>@{argLine} -Djava.io.tmpdir=${project.build.directory}/tmp</argLine>
+          <systemPropertyVariables>
+            <jdk.http.auth.tunneling.disabledSchemes></jdk.http.auth.tunneling.disabledSchemes>
+            <tools.repo.root>${maven.multiModuleProjectDirectory}/..</tools.repo.root>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-rules</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion><version>[21,)</version></requireJavaVersion>
+                <bannedDependencies>
+                  <!-- no product, no framework: the modules are plain Java libraries -->
+                  <excludes>
+                    <exclude>com.ash.drishti*:*</exclude>
+                    <exclude>com.ash.lake*:*</exclude>
+                    <exclude>com.ash.rachana*:*</exclude>
+                    <exclude>org.springframework*:*</exclude>
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
