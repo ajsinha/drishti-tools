@@ -147,14 +147,14 @@ MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_
 
 exec_maven() {
   unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
-  # Drishti Lake: Maven's own JVM unpacks jansi's native library into java.io.tmpdir, read once at JVM start; keep it out of the
+  # Drishti Tools (as Drishti Lake): Maven's own JVM unpacks jansi's native library into java.io.tmpdir, read once at JVM start; keep it out of the
   # system /tmp, under java/build-tmp/ (git-ignored; not under target/, which a clean removes while Maven runs). An absolute path, as
-  # .mvn/jvm.config can neither expand a variable nor make the folder. LAKE_MAVEN_TMP names another folder; a java.io.tmpdir in MAVEN_OPTS
+  # .mvn/jvm.config can neither expand a variable nor make the folder. TOOLS_MAVEN_TMP names another folder; a java.io.tmpdir in MAVEN_OPTS
   # wins. (Windows needs none: Maven ships jansi's DLL.)
   case "${MAVEN_OPTS-}" in
   *-Djava.io.tmpdir=*) ;;
   *)
-    _mvnw_tmp="${LAKE_MAVEN_TMP:-$(cd "$(dirname "$0")" && pwd)/build-tmp/maven}"
+    _mvnw_tmp="${TOOLS_MAVEN_TMP:-$(cd "$(dirname "$0")" && pwd)/build-tmp/maven}"
     mkdir -p "$_mvnw_tmp" 2>/dev/null && MAVEN_OPTS="-Djava.io.tmpdir=$_mvnw_tmp ${MAVEN_OPTS-}" && export MAVEN_OPTS
     ;;
   esac
