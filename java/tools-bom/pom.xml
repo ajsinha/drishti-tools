@@ -34,6 +34,8 @@
       <dependency><groupId>com.ash.tools</groupId><artifactId>tools-csv</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.tools</groupId><artifactId>tools-files</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.tools</groupId><artifactId>tools-testkit</artifactId><version>${project.version}</version></dependency>
+      <!-- the guards, published as a test jar: a consumer's guard module names it with scope test -->
+      <dependency><groupId>com.ash.tools</groupId><artifactId>tools-guards</artifactId><version>${project.version}</version><type>test-jar</type></dependency>
     </dependencies>
   </dependencyManagement>
 </project>

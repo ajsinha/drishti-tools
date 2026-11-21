@@ -19,18 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Stream;
+import com.ash.tools.guards.kit.ApiSurface;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -47,60 +41,9 @@ class ApiSurfaceTest {
         return module.resolve("api-surface.txt");
     }
 
-    static List<String> surface(Path module) throws Exception {
+    static List<String> surface(Path module) {
         String pkg = "com.ash.tools." + module.getFileName().toString().substring("tools-".length());
-        Path dir = module.resolve("target/classes").resolve(pkg.replace('.', '/'));
-        if (!Files.isDirectory(dir)) {
-            throw new AssertionError(dir + " is missing: build the modules first");
-        }
-        TreeSet<String> out = new TreeSet<>();
-        try (Stream<Path> files = Files.list(dir)) {
-            for (Path f : files.filter(x -> x.toString().endsWith(".class")).sorted().toList()) {
-                String n = f.getFileName().toString();
-                if (n.contains("$") || n.equals("package-info.class")) {
-                    continue;                                       // nested classes come with their owner
-                }
-                describe(Class.forName(pkg + "." + n.substring(0, n.length() - 6), false, ApiSurfaceTest.class.getClassLoader()), out);
-            }
-        }
-        return new ArrayList<>(out);
-    }
-
-    static boolean visible(int mod) {
-        return Modifier.isPublic(mod) || Modifier.isProtected(mod);
-    }
-
-    static void describe(Class<?> c, Set<String> out) {
-        if (!visible(c.getModifiers())) {
-            return;
-        }
-        String owner = c.getName();
-        StringBuilder head = new StringBuilder("class " + c.toGenericString());
-        if (c.getGenericSuperclass() != null && c.getSuperclass() != Object.class && !c.isEnum() && !c.isRecord()) {
-            head.append(" extends ").append(c.getGenericSuperclass().getTypeName());
-        }
-        for (java.lang.reflect.Type i : c.getGenericInterfaces()) {
-            head.append(" implements ").append(i.getTypeName());
-        }
-        out.add(head.toString());
-        for (Constructor<?> k : c.getDeclaredConstructors()) {
-            if (visible(k.getModifiers()) && !k.isSynthetic()) {
-                out.add(owner + " :: " + k.toGenericString());
-            }
-        }
-        for (Method m : c.getDeclaredMethods()) {
-            if (visible(m.getModifiers()) && !m.isSynthetic() && !m.isBridge()) {
-                out.add(owner + " :: " + m.toGenericString());
-            }
-        }
-        for (Field f : c.getDeclaredFields()) {
-            if (visible(f.getModifiers()) && !f.isSynthetic()) {
-                out.add(owner + " :: " + f.toGenericString());
-            }
-        }
-        for (Class<?> n : c.getDeclaredClasses()) {
-            describe(n, out);
-        }
+        return ApiSurface.of(module.resolve("target/classes"), pkg, ApiSurfaceTest.class.getClassLoader());
     }
 
     private static List<String> read(Path file) throws IOException {

@@ -28,6 +28,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import com.ash.tools.guards.kit.GuardFiles;
 
 /** The repository's files as the guards read them: the modules, their sources, their POMs, and the guards' own lists. */
 final class Sources {
@@ -36,7 +37,7 @@ final class Sources {
     static final Path REPO = Path.of(System.getProperty("tools.repo.root", "../..")).toAbsolutePath().normalize();
     static final Path JAVA = REPO.resolve("java");
     /** The owner's file cap, one constant for every guard. */
-    static final int MAX_LINES = 2500;
+    static final int MAX_LINES = GuardFiles.MAX_LINES;
 
     private Sources() {
     }
@@ -52,17 +53,7 @@ final class Sources {
 
     /** Every file under {@code root} with one of the suffixes, build output and the IDE's and git's folders left out. */
     static List<Path> files(Path root, String... suffixes) {
-        try (Stream<Path> w = Files.walk(root)) {
-            return w.filter(Files::isRegularFile)
-                    .filter(p -> {
-                        String s = p.toString().replace('\\', '/');
-                        return !s.contains("/target/") && !s.contains("/.mvn/") && !s.contains("/.git/") && !s.contains("/.idea/");
-                    })
-                    .filter(p -> Stream.of(suffixes).anyMatch(x -> p.getFileName().toString().endsWith(x)))
-                    .sorted().toList();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return GuardFiles.files(root, suffixes);
     }
 
     /** Every main source of the published modules. */
@@ -75,15 +66,11 @@ final class Sources {
     }
 
     static String read(Path p) {
-        try {
-            return Files.readString(p, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return GuardFiles.read(p);
     }
 
     static String rel(Path p) {
-        return REPO.relativize(p).toString().replace('\\', '/');
+        return GuardFiles.rel(REPO, p);
     }
 
     /** The lines of a guard's list (test resources), comments and blank lines left out. */

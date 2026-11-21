@@ -18,3 +18,4 @@ Entries are written per release; unreleased work is listed first.
   remove copies that exist today (i7b duplicate audit T3 to T6). `CanonicalJson` writes Jackson's `ORDER_MAP_ENTRIES_BY_KEYS` text
   (Jackson is the test oracle); the CSV pair is RFC 4180 with Commons CSV as the oracle; `TempFolder` is Drishti's and Lake's
   `TempFiles` without their settings (the owner names the base and the folder). Lake adopts `Hashes` and `TempFolder` now, Drishti in G4.
+- `tools-guards` is published as a test jar (`tools-guards:test-jar`, in the BOM): its `kit` package (`GuardFiles`, `HeaderAndLineCap`, `ApiSurface`) is the one copy of the header, line cap and API-surface checks Lake and Drishti call (i7b duplicate audit T10); the repository's own lists stay out of the jar.

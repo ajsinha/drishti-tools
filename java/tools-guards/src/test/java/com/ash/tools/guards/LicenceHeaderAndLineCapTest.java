@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.file.Path;
 import java.util.List;
+import com.ash.tools.guards.kit.HeaderAndLineCap;
 import org.junit.jupiter.api.Test;
 
 /** Every source carries the copyright header, and no file is longer than the shared cap ({@link Sources#MAX_LINES}). */
@@ -30,15 +31,11 @@ class LicenceHeaderAndLineCapTest {
 
     @Test
     void everySourceCarriesTheHeader() {
-        List<String> missing = sources().stream()
-                .filter(p -> Sources.read(p).lines().limit(20).noneMatch(l -> l.contains("Copyright (c) 2026 Ashutosh Sinha")))
-                .map(Sources::rel).toList();
-        assertEquals(List.of(), missing, "files without the copyright header");
+        assertEquals(List.of(), HeaderAndLineCap.withoutHeader(Sources.REPO, sources()), "files without the copyright header");
     }
 
     @Test
     void noFileIsOverTheCap() {
-        List<String> over = sources().stream().filter(p -> Sources.read(p).lines().count() > Sources.MAX_LINES).map(Sources::rel).toList();
-        assertEquals(List.of(), over, "files over " + Sources.MAX_LINES + " lines");
+        assertEquals(List.of(), HeaderAndLineCap.overCap(Sources.REPO, sources()), "files over " + Sources.MAX_LINES + " lines");
     }
 }

@@ -23,12 +23,10 @@
   </parent>
   <artifactId>tools-guards</artifactId>
   <name>Drishti Tools: tools-guards</name>
-  <description>The repository's guards (tests only, not published): API surface additive-only, domain words, product names, dependencies, module rules, header and line cap.</description>
+  <description>The repository's guards (published as a test jar: its kit package): API surface additive-only, domain words, product names, dependencies, module rules, header and line cap.</description>
 
   <properties>
     <tools.api.surface.write>false</tools.api.surface.write>
-    <maven.install.skip>true</maven.install.skip>
-    <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
   <dependencies>
     <!-- test scope: the API surface guard loads every module's compiled classes -->
@@ -44,6 +42,18 @@
   </dependencies>
   <build>
     <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals><goal>test-jar</goal></goals>
+            <configuration>
+              <!-- the classes only (the kit): this repository's own lists stay out, a consumer has its own -->
+              <includes><include>com/ash/tools/guards/kit/**</include></includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
