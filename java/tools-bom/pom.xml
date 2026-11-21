@@ -18,7 +18,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ash.tools</groupId>
   <artifactId>tools-bom</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Drishti Tools: the bill of materials (one version for every module)</name>
   <description>Import it in a consumer's dependencyManagement (scope import) and name the modules without versions.</description>

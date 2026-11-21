@@ -3,6 +3,8 @@
 
 Entries are written per release; unreleased work is listed first.
 
+## Unreleased
+
 ## 1.0.0 (2026-11-21)
 
 - The repository: Maven reactor `com.ash.tools` (JDK 21, `mvnw`), `tools-bom`, the guards (`tools-guards`), LICENSE, IDE launchers.
