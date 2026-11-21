@@ -1,0 +1,30 @@
+// Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+// Drishti Tools. Proprietary: see LICENSE.
+//
+// Drishti Tools in VS Code: File, Open Workspace from File. The tasks mirror the IntelliJ run configurations (java/run-configs).
+// JDK 21: change the path below (Windows: C:\\jdk-21). Build and run in the IDE: README.md#build-and-run-in-the-ide.
+// The modules are libraries: there is no program to launch; run tests from the Testing view.
+{
+  "folders": [ { "name": "tools", "path": "." } ],
+  "extensions": {
+    "recommendations": [ "vscjava.vscode-java-pack", "redhat.vscode-xml" ]
+  },
+  "settings": {
+    "java.configuration.runtimes": [
+      { "name": "JavaSE-21", "path": "/usr/lib/jvm/java-21-openjdk-amd64", "default": true }
+    ],
+    "java.jdt.ls.java.home": "/usr/lib/jvm/java-21-openjdk-amd64",
+    "java.import.maven.enabled": true,
+    "java.configuration.updateBuildConfiguration": "automatic"
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      { "label": "Tools build all", "type": "shell", "command": "./mvnw clean verify -DskipTests", "windows": { "command": "mvnw.cmd clean verify -DskipTests" }, "options": { "cwd": "${workspaceFolder:tools}/java" }, "group": "build", "problemMatcher": [] },
+      { "label": "Tools test", "type": "shell", "command": "./mvnw clean verify", "windows": { "command": "mvnw.cmd clean verify" }, "options": { "cwd": "${workspaceFolder:tools}/java" }, "group": "test", "problemMatcher": [] },
+      { "label": "Tools API surface rewrite", "type": "shell", "command": "./mvnw clean verify -Dtools.api.surface.write=true", "windows": { "command": "mvnw.cmd clean verify -Dtools.api.surface.write=true" }, "options": { "cwd": "${workspaceFolder:tools}/java" }, "problemMatcher": [] },
+      { "label": "Tools xlsx with LibreOffice", "type": "shell", "command": "./mvnw clean verify -pl tools-xlsx -am -Dtools.test.soffice=true", "windows": { "command": "mvnw.cmd clean verify -pl tools-xlsx -am -Dtools.test.soffice=true" }, "options": { "cwd": "${workspaceFolder:tools}/java" }, "problemMatcher": [] },
+      { "label": "Tools install release (ONLY on a release tag)", "type": "shell", "command": "./mvnw clean install -DskipTests", "windows": { "command": "mvnw.cmd clean install -DskipTests" }, "options": { "cwd": "${workspaceFolder:tools}/java" }, "problemMatcher": [] }
+    ]
+  }
+}
