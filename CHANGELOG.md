@@ -14,3 +14,7 @@ Entries are written per release; unreleased work is listed first.
   Fixed on the way: a chart's sheet reference is XML-escaped (a sheet named with `&` broke the chart part); every sheet name is made
   valid and unique; the pivot export's formulas are checked against the common function set; a formula's NaN result is cached as
   `#NUM!` everywhere; the same input gives the same bytes.
+- `tools-codec` (`Hashes`, `CanonicalJson`), `tools-csv` (`CsvReader`, `CsvWriter`), `tools-files` (`TempFolder`): the extras that
+  remove copies that exist today (i7b duplicate audit T3 to T6). `CanonicalJson` writes Jackson's `ORDER_MAP_ENTRIES_BY_KEYS` text
+  (Jackson is the test oracle); the CSV pair is RFC 4180 with Commons CSV as the oracle; `TempFolder` is Drishti's and Lake's
+  `TempFiles` without their settings (the owner names the base and the folder). Lake adopts `Hashes` and `TempFolder` now, Drishti in G4.

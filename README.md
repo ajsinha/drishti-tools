@@ -7,7 +7,7 @@ summary: >-
 status: 1.0.0 in preparation (no tag yet); built and tested on its own; consumers adopt from a tag (Lake in G3, Drishti in G4)
 coordinates: {groupId: com.ash.tools, package: com.ash.tools.<module>, bom: com.ash.tools:tools-bom}
 java: 21
-modules: [tools-settings, tools-net, tools-concurrent, tools-time, tools-xlsx, tools-testkit, tools-guards]
+modules: [tools-settings, tools-net, tools-concurrent, tools-time, tools-xlsx, tools-codec, tools-csv, tools-files, tools-testkit, tools-guards]
 depends-on: [the JDK only; tools-net uses tools-settings; tests use JUnit, AssertJ and Apache POI]
 commands: {build: "cd java && ./mvnw clean verify"}
 consumers: [Drishti Lake (G3), Drishti (G4)]
@@ -34,6 +34,9 @@ Author: Ashutosh Sinha. Proprietary. All rights reserved (see [LICENSE](LICENSE)
 | `tools-concurrent` | `com.ash.tools.concurrent` | `SingleFlight`: one load per key at a time | JDK |
 | `tools-time` | `com.ash.tools.time` | `LoadGuard`: no business date in the future, retention from the load's newest date, no mass drop by accident | JDK |
 | `tools-xlsx` | `com.ash.tools.xlsx` | the one .xlsx writer: `Workbook`, `Sheet` (streaming, constant memory), `Styles`, `PrintSetup`, `ChartSpec` (native charts), `Formulas` (the function set Excel, LibreOffice and Google Sheets share), `WorkbookTemplate` (fill a finished workbook), `Cells` | JDK (Apache POI is its test oracle only) |
+| `tools-codec` | `com.ash.tools.codec` | `Hashes` (digests as lower-case hex, text as UTF-8, files as streams, no checked exception), `CanonicalJson` (plain data as JSON text with every map in key order: the same bytes as Jackson's `ORDER_MAP_ENTRIES_BY_KEYS`) | JDK (Jackson is its test oracle only) |
+| `tools-csv` | `com.ash.tools.csv` | RFC 4180: `CsvReader` (streaming; quotes, doubled quotes, line breaks in quotes, a byte-order mark dropped), `CsvWriter` (quotes only where needed, CRLF, optional byte-order mark and formula guard) | JDK (Apache Commons CSV is its test oracle only) |
+| `tools-files` | `com.ash.tools.files` | `TempFolder`: one owner's temporary folder under a base it names, marked, removed on a clean stop; stale folders listed, never removed | JDK |
 | `tools-testkit` | `com.ash.tools.testkit` | `FakeProxy` (a local forward proxy), `TlsFixture` and `TestPki` (a throw-away PKI) | JDK |
 | `tools-bom` | | one version for every module | |
 | `tools-guards` | | the repository's rules, as tests (below); not published | |

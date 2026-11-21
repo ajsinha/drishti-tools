@@ -35,6 +35,9 @@
     <module>tools-concurrent</module>
     <module>tools-time</module>
     <module>tools-xlsx</module>
+    <module>tools-codec</module>
+    <module>tools-csv</module>
+    <module>tools-files</module>
     <module>tools-testkit</module>
     <module>tools-guards</module>
   </modules>
@@ -54,6 +57,10 @@
       <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><version>3.27.7</version></dependency>
       <!-- the xlsx oracle (TL-2): every workbook the writer makes is read back with Apache POI, in tools-xlsx's tests only -->
       <dependency><groupId>org.apache.poi</groupId><artifactId>poi-ooxml</artifactId><version>5.4.1</version></dependency>
+      <!-- the canonical JSON oracle: CanonicalJson's text equals Jackson's (ORDER_MAP_ENTRIES_BY_KEYS), in tools-codec's tests only -->
+      <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId><version>2.21.4</version></dependency>
+      <!-- the CSV oracle: what the writer writes, Apache Commons CSV reads back the same, in tools-csv's tests only -->
+      <dependency><groupId>org.apache.commons</groupId><artifactId>commons-csv</artifactId><version>1.10.0</version></dependency>
     </dependencies>
   </dependencyManagement>
 

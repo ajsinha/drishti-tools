@@ -37,6 +37,9 @@
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-concurrent</artifactId><version>${project.version}</version><scope>test</scope></dependency>
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-time</artifactId><version>${project.version}</version><scope>test</scope></dependency>
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-xlsx</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-csv</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-files</artifactId><version>${project.version}</version><scope>test</scope></dependency>
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-testkit</artifactId><version>${project.version}</version><scope>test</scope></dependency>
   </dependencies>
   <build>

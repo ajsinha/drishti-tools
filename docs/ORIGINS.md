@@ -31,7 +31,9 @@ product-free. Nothing else differed.
 `TlsSettings.parse` wraps it in a `TlsException` with the same message, and `ProxySettings` turns it into a `ProxyException` as
 before, so callers see what they saw. Its `secret(get, prefix, key)` and `expand` became public for `tools-net`.
 
-Not taken (design 1.1): `TempFiles` (the copies have diverged, 229 lines: `tools-files` in i8), the archive readers (Lake's), Rachana's
+Taken in G3 (i7b duplicate audit, DD-3): `TempFiles` as `tools-files` `TempFolder` (the instance core of both copies; each product keeps
+only where its base comes from), hash helpers and canonical JSON as `tools-codec`, the CSV reader and writer as `tools-csv`.
+Not taken: the archive readers (Lake's), Rachana's
 `Sha384`, `Rlib`, `ViewJson` (stay in Rachana core).
 
 ## The four xlsx writers, folded into one
