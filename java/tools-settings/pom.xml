@@ -19,7 +19,7 @@
   <parent>
     <groupId>com.ash.tools</groupId>
     <artifactId>tools-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>tools-settings</artifactId>
   <name>Drishti Tools: tools-settings</name>
