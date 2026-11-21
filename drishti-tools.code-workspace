@@ -2,7 +2,7 @@
 // Drishti Tools. Proprietary: see LICENSE.
 //
 // Drishti Tools in VS Code: File, Open Workspace from File. The tasks mirror the IntelliJ run configurations (java/run-configs).
-// JDK 21: change the path below (Windows: C:\\jdk-21). Build and run in the IDE: README.md#build-and-run-in-the-ide.
+// JDK 21: change the path below (Windows: C:\\jdk-21). Build and run in the IDE: docs/BUILD_AND_IDE.md.
 // The modules are libraries: there is no program to launch; run tests from the Testing view.
 {
   "folders": [ { "name": "tools", "path": "." } ],

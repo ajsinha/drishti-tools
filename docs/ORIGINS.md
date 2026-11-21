@@ -5,7 +5,7 @@ Read from git only: Drishti `main` at `9ce7c3170`, Drishti Lake `origin/main` at
 history** from Drishti (`git filter-repo` over a scratch clone, each file's earlier paths followed, commit messages kept; Lake's
 copies of the same files have 11 commits of history, all after they were copied from Drishti, so Drishti's is the fuller one).
 Both copies were then compared line by line (package names removed); this page lists every difference and how it was resolved.
-Neither Drishti nor Lake was changed: each adopts from a tag (Lake in G3, Drishti in G4).
+Each consumer adopts a released tag.
 
 ## The copies in Drishti and Lake
 
@@ -31,7 +31,7 @@ product-free. Nothing else differed.
 `TlsSettings.parse` wraps it in a `TlsException` with the same message, and `ProxySettings` turns it into a `ProxyException` as
 before, so callers see what they saw. Its `secret(get, prefix, key)` and `expand` became public for `tools-net`.
 
-Taken in G3 (i7b duplicate audit, DD-3): `TempFiles` as `tools-files` `TempFolder` (the instance core of both copies; each product keeps
+Also taken, because the copies existed in both products: `TempFiles` as `tools-files` `TempFolder` (the instance core of both copies; each product keeps
 only where its base comes from), hash helpers and canonical JSON as `tools-codec`, the CSV reader and writer as `tools-csv`.
 Not taken: the archive readers (Lake's), Rachana's
 `Sha384`, `Rlib`, `ViewJson` (stay in Rachana core).
@@ -72,5 +72,4 @@ Where the writers behaved differently, one behaviour was chosen:
 The proof (tests): every feature written and read back by Apache POI cell by cell, POI's formula results equal to the cached ones,
 the layout (panes, widths, merges, drop-downs, conditional formats, print set-up, names, outline, tab colour), byte-identical
 output twice, charts found by POI with their series, a template's cells and live formulas, a million cells under a 64 MB heap,
-and (on request) LibreOffice converting the books. G4 adds the before-and-after evidence: Drishti's frozen exports and playground
-books written on the old code and on this module, compared cell by cell and formula by formula.
+and (on request) LibreOffice converting the books.

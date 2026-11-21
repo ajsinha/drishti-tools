@@ -3,7 +3,7 @@
 
 Entries are written per release; unreleased work is listed first.
 
-## Unreleased (1.0.0)
+## Unreleased
 
 - The repository: Maven reactor `com.ash.tools` (JDK 21, `mvnw`), `tools-bom`, the guards (`tools-guards`), LICENSE, IDE launchers.
 - `tools-settings`, `tools-net`, `tools-concurrent`, `tools-time`, `tools-testkit`: from Drishti `main` `9ce7c3170` with history,

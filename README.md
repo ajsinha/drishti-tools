@@ -4,14 +4,14 @@ name: Drishti Tools
 summary: >-
   Shared, domain-free Java utilities for the Drishti family: settings and placeholders, TLS and the outbound proxy, single flight,
   the load guard, the one .xlsx writer, and test fixtures. Written once, fixed in one place, used by Drishti and Drishti Lake.
-status: 1.0.0 in preparation (no tag yet); built and tested on its own; consumers adopt from a tag (Lake in G3, Drishti in G4)
+status: built and tested on its own; consumers build against a released tag installed in ~/.m2
 coordinates: {groupId: com.ash.tools, package: com.ash.tools.<module>, bom: com.ash.tools:tools-bom}
 java: 21
 modules: [tools-settings, tools-net, tools-concurrent, tools-time, tools-xlsx, tools-codec, tools-csv, tools-files, tools-testkit, tools-guards]
 depends-on: [the JDK only; tools-net uses tools-settings; tests use JUnit, AssertJ and Apache POI]
 commands: {build: "cd java && ./mvnw clean verify"}
-consumers: [Drishti Lake (G3), Drishti (G4)]
-design: drishti docs/plans/DRISHTI_TOOLS_DESIGN.md (decisions TL-1 to TL-14)
+consumers: [Drishti Lake, Drishti]
+docs: [docs/BUILD_AND_IDE.md, docs/guides/, docs/ORIGINS.md]
 licence: proprietary (LICENSE)
 ---
 
@@ -50,16 +50,7 @@ A consumer imports the BOM and names modules without versions:
 </dependencies></dependencyManagement>
 ```
 
-A small workbook:
-
-```java
-try (Workbook wb = Workbook.to(out)) {                    // out is the caller's: flushed, never closed
-    Sheet s = wb.sheet("Prices").freeze(1, 0).width(0, 20);
-    s.row(1).text(0, "Name", "header").text(1, "Price", "header");
-    s.row(2).text(0, "A", null).number(1, 12.5, "decimal");
-    s.row(3).text(0, "Total", "bold").formula(1, "SUM(B2:B2)", 12.5, "number-bold");
-}
-```
+Each module has a guide with a tutorial that was run: see Documents below.
 
 ## The rules (tools-guards)
 
@@ -74,34 +65,37 @@ try (Workbook wb = Workbook.to(out)) {                    // out is the caller's
 | `ExemptionsOnlyShrinkTest` | the guards' exemptions (none at 1.0.0) only shrink |
 
 A new module needs two consumers or the owner's word, is domain-free, and takes the standard library first, a thin wrapper second,
-its own code last and then with an oracle test (TL-14).
+its own code last and then with an oracle test.
 
-## Build
+## Install and build
+
+The family installs in this order: **Rachana (tag) -> Drishti Tools (tag) -> Drishti Lake (tag) -> Drishti**. A consumer builds against a
+released tag, installed into `~/.m2/repository/com/ash/tools/` (Windows `C:\Users\<user>\.m2\repository\com\ash\tools\`), never against a branch.
 
 ```text
-cd java && ./mvnw clean verify      # JDK 21 or later; about half a minute
+cd java && ./mvnw clean verify                          # JDK 21 or later; every module, test and guard; about half a minute
+git checkout vX.Y.Z && cd java && ./mvnw clean install -DskipTests     # install a release (tag only)
 ```
-
-Test files are written under each module's `target/`. `tools-xlsx` also runs a million cells under a 64 MB heap in a JVM of its
-own; `-Dtools.test.soffice=true` adds a LibreOffice conversion of the test workbooks when LibreOffice is installed. Until the
-first tag, a consumer builds against this repository with a scratch local repository (`-Dmaven.repo.local=...`); `install` is for
-a release tag only.
 
 ## Build and run in the IDE
 
-JDK 21 as the project SDK, and **Maven, Runner, JRE: Use Project JDK**.
-
-| IDE | What runs what |
-|---|---|
-| **IntelliJ IDEA** (open `java/pom.xml`) | `java/run-configs/`, folder **Tools**: **Tools build all** (no tests), **Tools test** (the full build with every test and guard), **Tools API surface rewrite** (after a reviewed API addition), **Tools xlsx with LibreOffice**, **Tools install release** (a release tag only). Any test class runs from its gutter icon |
-| **VS Code** | **File, Open Workspace from File**, `drishti-tools.code-workspace`: the same Maven tasks; tests from the Testing view. Recommended: Extension Pack for Java |
-
-There is no program to run: the modules are libraries. PyCharm is not needed (no Python here).
+JDK 21 as the project SDK. **IntelliJ IDEA**: open `java/pom.xml`; run configurations are in `java/run-configs/` (folder **Tools**).
+**VS Code**: open `drishti-tools.code-workspace`; the same tasks. **PyCharm** is not needed (no Python here). The modules are libraries, so
+there is no program to run. Steps, the Windows `PKIX` fix and the scratch-repository build: [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md).
 
 ## Documents
 
 | Document | What |
 |---|---|
-| [docs/ORIGINS.md](docs/ORIGINS.md) | where each class came from, every difference between the copies and how it was resolved, the xlsx writers folded |
+| [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md) | prepare, build, install from a tag, IntelliJ, VS Code, Windows, the guards |
+| [docs/guides/SETTINGS.md](docs/guides/SETTINGS.md) | `tools-settings`: placeholders, settings files, secrets, path anchors (with a tutorial) |
+| [docs/guides/NET.md](docs/guides/NET.md) | `tools-net`: TLS and the outbound proxy (two tutorials) |
+| [docs/guides/CONCURRENT.md](docs/guides/CONCURRENT.md) | `tools-concurrent`: `SingleFlight` |
+| [docs/guides/TIME.md](docs/guides/TIME.md) | `tools-time`: `LoadGuard` |
+| [docs/guides/XLSX.md](docs/guides/XLSX.md) | `tools-xlsx`: the one workbook writer |
+| [docs/guides/CODEC.md](docs/guides/CODEC.md) | `tools-codec`: `Hashes`, `CanonicalJson` |
+| [docs/guides/CSV.md](docs/guides/CSV.md) | `tools-csv`: RFC 4180 reader and writer |
+| [docs/guides/FILES.md](docs/guides/FILES.md) | `tools-files`: `TempFolder` |
+| [docs/guides/TESTKIT.md](docs/guides/TESTKIT.md) | `tools-testkit`: `FakeProxy`, `TestPki`, `TlsFixture` |
+| [docs/ORIGINS.md](docs/ORIGINS.md) | design and origin: where each class came from, every difference between the copies and how it was resolved |
 | [CHANGELOG.md](CHANGELOG.md) | what changed when |
-| Drishti `docs/plans/DRISHTI_TOOLS_DESIGN.md` | the design and the decisions TL-1 to TL-14 |
