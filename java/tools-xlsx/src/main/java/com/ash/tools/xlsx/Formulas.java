@@ -31,24 +31,24 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * The formulas a generated workbook may hold (the playgrounds, docs/guides/VAR_GUIDE.md section 10): only functions that
- * Excel, LibreOffice Calc and Google Sheets share, so one file recalculates the same in all three. Never Excel-365-only dynamic arrays
+ * The formulas a generated workbook may hold: only functions that Excel, LibreOffice Calc and Google Sheets share, so one file recalculates the same in all three. Never Excel-365-only dynamic arrays
  * ({@code FILTER}, {@code SORT}, {@code SEQUENCE}, {@code LET}, {@code LAMBDA}, {@code XLOOKUP}), volatile {@code INDIRECT} or
  * {@code OFFSET}, structured references or macros. {@link #check} refuses a formula that names anything else; {@link #scan} lists every
- * formula of a finished .xlsx that does (the drill's formula scanner).
+ * formula of a finished .xlsx that does (a release's formula scanner). The writer ({@link Sheet#formula}) checks every formula
+ * it writes, so a workbook made with it never holds another.
  */
-public final class XlsxFormulas {
+public final class Formulas {
 
     /** The functions a formula may call. */
     public static final Set<String> ALLOWED = Set.of("SUM", "SUMPRODUCT", "SMALL", "LARGE", "AVERAGE", "COUNT", "INDEX", "MATCH", "ROUNDDOWN",
-            "ROUNDUP", "SQRT", "IF", "ABS", "MAX", "MIN", "AND", "OR", "ISNUMBER", "EXP", "SUMIFS", "SUMIF", // domain-strings: generic (the Excel function)
-            "NORM.S.INV", "PI");                                         // 2.9.11.c: parametric VaR (Excel 2010+, LibreOffice 4.2+, Google Sheets)
+            "ROUNDUP", "SQRT", "IF", "ABS", "MAX", "MIN", "AND", "OR", "ISNUMBER", "EXP", "SUMIFS", "SUMIF",
+            "NORM.S.INV", "PI");                                         // NORM.S.INV: Excel 2010+, LibreOffice 4.2+, Google Sheets
 
     /** A function call: a name then an opening parenthesis (a sheet name or a defined name is never followed by one). */
     private static final Pattern CALL = Pattern.compile("([A-Za-z_][A-Za-z0-9_.]*)\\s*\\(");
     private static final Pattern FORMULA = Pattern.compile("<f(?:\\s[^>]*)?>([^<]*)</f>");
 
-    private XlsxFormulas() {}
+    private Formulas() {}
 
     /** The functions {@code formula} calls, upper case, in order of first use (string literals and quoted sheet names skipped). */
     public static List<String> functions(String formula) {
@@ -75,19 +75,28 @@ public final class XlsxFormulas {
         return List.copyOf(out);
     }
 
-    /** {@code formula} when it calls only {@link #ALLOWED} functions; IllegalArgumentException naming the others. */
+    /** {@code formula} when it calls only {@link #ALLOWED} functions; IllegalArgumentException naming the others ({@link #problem}). */
     public static String check(String formula) {
+        String why = problem(formula);
+        if (why != null) {
+            throw new IllegalArgumentException(why);
+        }
+        return formula;
+    }
+
+    /** Null when {@code formula} may be written; otherwise why it is refused (empty, a leading {@code =}, a function outside {@link #ALLOWED}). */
+    public static String problem(String formula) {
         if (formula == null || formula.isBlank()) {
-            throw new IllegalArgumentException("an empty formula");
+            return "an empty formula";
         }
         if (formula.startsWith("=")) {
-            throw new IllegalArgumentException("a formula is written without its leading '=': " + formula);
+            return "a formula is written without its leading '=': " + formula;
         }
         List<String> bad = functions(formula).stream().filter(f -> !ALLOWED.contains(f)).toList();
         if (!bad.isEmpty()) {
-            throw new IllegalArgumentException("functions outside the Excel, LibreOffice and Google Sheets common set " + bad + " in " + formula);
+            return "functions outside the Excel, LibreOffice and Google Sheets common set " + bad + " in " + formula;
         }
-        return formula;
+        return null;
     }
 
     /** Every formula of an .xlsx that calls a function outside {@link #ALLOWED}: {@code part: function in formula}; empty when clean. */

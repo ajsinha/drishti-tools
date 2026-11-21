@@ -15,113 +15,71 @@
  */
 package com.ash.tools.xlsx;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
- * Native Excel charts for the chart sections of an export: DrawingML chart parts written as plain XML next to the data sheet (bar, column, line, area, pie and
- * doughnut; any other chart visual is drawn as columns). The chart reads the sheet's own cells, so it shows exactly what the sheet shows: a column that is
- * masked for the reader is text in the sheet, so it is never a series. A section with no category column or no numeric column gets no chart, and the data table
- * is always there.
+ * Native Excel charts as plain DrawingML parts: one drawing per sheet holding its charts' anchors, and one chart part per
+ * {@link ChartSpec} (bar, column, line, area, pie and doughnut). Each series reads the sheet's own cells, named by its title cell.
  */
-final class XlsxCharts {
+final class Charts {
 
-    /** At most this many categories are plotted; a chart of more says nothing a table does not. */
-    static final int MAX_POINTS = 500;
-    /** At most this many series (numeric columns). */
-    static final int MAX_SERIES = 6;
-
-    private static final String XML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
+    static final String XML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     private static final String C = "http://schemas.openxmlformats.org/drawingml/2006/chart";
     private static final String A = "http://schemas.openxmlformats.org/drawingml/2006/main";
     private static final String R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
     private static final String[] COLOURS = {"4E79A7", "F28E2B", "59A14F", "E15759", "76B7B2", "EDC948"};
 
-    /** What to draw for a section: the kind, the numeric columns (the category column is always the first) and how many points. */
-    record Plan(String kind, List<Integer> series, boolean dateCategories, int points) {}
+    private Charts() {}
 
-    private XlsxCharts() {}
-
-    /** The chart plan for a section, or null when it has no chart (not a chart section, no rows, no plottable column). */
-    static Plan plan(ExportDoc.Section s) {
-        if (!ExportDoc.CHART.equals(s.type()) || s.rows().isEmpty() || s.columns().size() < 2) {
-            return null;
+    /** The drawing part of a sheet: one anchor per chart, the n-th chart related as {@code rId<n>}. */
+    static String drawing(List<ChartSpec> charts) {
+        StringBuilder b = new StringBuilder(XML).append("<xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:a=\"")
+                .append(A).append("\">");
+        for (int i = 0; i < charts.size(); i++) {
+            ChartSpec s = charts.get(i);
+            b.append("<xdr:twoCellAnchor><xdr:from><xdr:col>").append(s.anchorColumn()).append("</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>")
+                    .append(s.anchorRow()).append("</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>")
+                    .append(s.anchorColumn() + s.widthColumns()).append("</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>").append(s.anchorRow() + s.heightRows())
+                    .append("</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:graphicFrame macro=\"\"><xdr:nvGraphicFramePr><xdr:cNvPr id=\"")
+                    .append(i + 2).append("\" name=\"Chart ").append(i + 1).append("\"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>")
+                    .append("<xdr:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"0\" cy=\"0\"/></xdr:xfrm><a:graphic><a:graphicData uri=\"").append(C).append("\">")
+                    .append("<c:chart xmlns:c=\"").append(C).append("\" xmlns:r=\"").append(R).append("\" r:id=\"rId").append(i + 1)
+                    .append("\"/></a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor>");
         }
-        String kind = kind(s.kind());
-        boolean round = "pie".equals(kind) || "doughnut".equals(kind);
-        List<Integer> series = new ArrayList<>();
-        for (int c = 1; c < s.columns().size() && series.size() < (round ? 1 : MAX_SERIES); c++) {
-            if (!s.masked().contains(s.columns().get(c)) && s.isNumeric(c)) {
-                series.add(c);
-            }
-        }
-        Object first = firstOf(s, 0);
-        if (series.isEmpty() || s.isNumeric(0) && !(first instanceof LocalDate)) {
-            return null;
-        }
-        return new Plan(kind, series, first instanceof LocalDate, Math.min(s.rows().size(), MAX_POINTS));
+        return b.append("</xdr:wsDr>").toString();
     }
 
-    private static Object firstOf(ExportDoc.Section s, int column) {
-        for (List<Object> r : s.rows()) {
-            if (column < r.size() && r.get(column) != null) {
-                return r.get(column);
-            }
-        }
-        return null;
-    }
-
-    static String kind(String visual) {
-        return switch (visual == null ? "" : visual.toLowerCase(Locale.ROOT)) {
-            case "bar" -> "bar";
-            case "line" -> "line";
-            case "area" -> "area";
-            case "pie" -> "pie";
-            case "donut", "doughnut" -> "doughnut";
-            default -> "column";
-        };
-    }
-
-    /** The drawing part: one chart, anchored just right of the data (starting at column {@code fromCol}, row 1), about 9 columns by 20 rows. */
-    static String drawing(int fromCol) {
-        return XML + "<xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:a=\"" + A + "\">"
-                + "<xdr:twoCellAnchor><xdr:from><xdr:col>" + fromCol + "</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>"
-                + "<xdr:to><xdr:col>" + (fromCol + 9) + "</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>20</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>"
-                + "<xdr:graphicFrame macro=\"\"><xdr:nvGraphicFramePr><xdr:cNvPr id=\"2\" name=\"Chart 1\"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>"
-                + "<xdr:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"0\" cy=\"0\"/></xdr:xfrm><a:graphic><a:graphicData uri=\"" + C + "\">"
-                + "<c:chart xmlns:c=\"" + C + "\" xmlns:r=\"" + R + "\" r:id=\"rId1\"/></a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor></xdr:wsDr>";
-    }
-
-    /** The chart part for {@code s}, whose data is on the sheet called {@code sheet} (header in row 1, data from row 2). */
-    static String chart(ExportDoc.Section s, Plan p, String sheet) {
-        String ref = "'" + sheet.replace("'", "''") + "'!";
-        int last = p.points() + 1;
-        boolean round = "pie".equals(p.kind()) || "doughnut".equals(p.kind());
+    /** The chart part for {@code p}, whose data are on the sheet called {@code sheet}. */
+    static String chart(ChartSpec p, String sheet) {
+        String ref = Cells.quoteSheet(sheet) + "!";
+        int first = p.headerRow() + 1;
+        int last = p.lastRow();
+        boolean round = p.kind().round();
         String tag = switch (p.kind()) {
-            case "line" -> "lineChart";
-            case "area" -> "areaChart";
-            case "pie" -> "pieChart";
-            case "doughnut" -> "doughnutChart";
+            case LINE -> "lineChart";
+            case AREA -> "areaChart";
+            case PIE -> "pieChart";
+            case DOUGHNUT -> "doughnutChart";
             default -> "barChart";
         };
         StringBuilder b = new StringBuilder(XML).append("<c:chartSpace xmlns:c=\"").append(C).append("\" xmlns:a=\"").append(A).append("\" xmlns:r=\"").append(R).append("\">");
-        b.append("<c:roundedCorners val=\"0\"/><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:p><a:r><a:t>").append(XlsxWriter.esc(s.title()))
+        b.append("<c:roundedCorners val=\"0\"/><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:p><a:r><a:t>").append(Cells.esc(p.title()))
                 .append("</a:t></a:r></a:p></c:rich></c:tx><c:overlay val=\"0\"/></c:title><c:autoTitleDeleted val=\"0\"/><c:plotArea><c:layout/>");
         b.append("<c:").append(tag).append('>');
         if (tag.equals("barChart")) {
-            b.append("<c:barDir val=\"").append("bar".equals(p.kind()) ? "bar" : "col").append("\"/><c:grouping val=\"clustered\"/>");
+            b.append("<c:barDir val=\"").append(p.kind() == ChartSpec.Kind.BAR ? "bar" : "col").append("\"/><c:grouping val=\"clustered\"/>");
         } else if (tag.equals("lineChart") || tag.equals("areaChart")) {
             b.append("<c:grouping val=\"standard\"/>");
         }
         b.append("<c:varyColors val=\"").append(round ? 1 : 0).append("\"/>");
+        String catCol = Cells.col(p.categoryColumn());
+        List<Integer> series = round ? p.seriesColumns().subList(0, 1) : p.seriesColumns();
         int n = 0;
-        for (int col : p.series()) {
-            String letter = XlsxWriter.col(col);
+        for (int col : series) {
+            String letter = Cells.col(col);
             String colour = COLOURS[n % COLOURS.length];
             b.append("<c:ser><c:idx val=\"").append(n).append("\"/><c:order val=\"").append(n).append("\"/>");
-            b.append("<c:tx><c:strRef><c:f>").append(ref).append('$').append(letter).append("$1</c:f></c:strRef></c:tx>");
+            b.append("<c:tx><c:strRef><c:f>").append(Cells.esc(ref)).append('$').append(letter).append('$').append(p.headerRow()).append("</c:f></c:strRef></c:tx>");
             if (!round) {
                 b.append("<c:spPr>").append(tag.equals("lineChart") ? "<a:ln w=\"28575\"><a:solidFill><a:srgbClr val=\"" + colour + "\"/></a:solidFill></a:ln>"
                         : "<a:solidFill><a:srgbClr val=\"" + colour + "\"/></a:solidFill>").append("</c:spPr>");
@@ -129,9 +87,10 @@ final class XlsxCharts {
             if (tag.equals("barChart")) {
                 b.append("<c:invertIfNegative val=\"0\"/>");
             }
-            String cat = ref + "$A$2:$A$" + last;
+            String cat = Cells.esc(ref) + "$" + catCol + "$" + first + ":$" + catCol + "$" + last;
             b.append(p.dateCategories() ? "<c:cat><c:numRef><c:f>" + cat + "</c:f></c:numRef></c:cat>" : "<c:cat><c:strRef><c:f>" + cat + "</c:f></c:strRef></c:cat>");
-            b.append("<c:val><c:numRef><c:f>").append(ref).append('$').append(letter).append("$2:$").append(letter).append('$').append(last).append("</c:f></c:numRef></c:val>");
+            b.append("<c:val><c:numRef><c:f>").append(Cells.esc(ref)).append('$').append(letter).append('$').append(first).append(":$").append(letter).append('$')
+                    .append(last).append("</c:f></c:numRef></c:val>");
             if (tag.equals("lineChart")) {
                 b.append("<c:smooth val=\"0\"/>");
             }
@@ -151,7 +110,7 @@ final class XlsxCharts {
         }
         b.append("</c:").append(tag).append('>');
         if (!round) {
-            boolean horizontal = "bar".equals(p.kind());
+            boolean horizontal = p.kind() == ChartSpec.Kind.BAR;
             b.append("<c:catAx><c:axId val=\"111111\"/><c:scaling><c:orientation val=\"").append(horizontal ? "maxMin" : "minMax").append("\"/></c:scaling><c:delete val=\"0\"/>")
                     .append("<c:axPos val=\"").append(horizontal ? "l" : "b").append("\"/><c:numFmt formatCode=\"").append(p.dateCategories() ? "yyyy-mm-dd" : "General")
                     .append("\" sourceLinked=\"0\"/><c:majorTickMark val=\"none\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"222222\"/>")
@@ -162,7 +121,7 @@ final class XlsxCharts {
                     .append("\"/><c:crossBetween val=\"between\"/></c:valAx>");
         }
         b.append("</c:plotArea>");
-        if (p.series().size() > 1 || round) {
+        if (series.size() > 1 || round) {
             b.append("<c:legend><c:legendPos val=\"b\"/><c:overlay val=\"0\"/></c:legend>");
         }
         return b.append("<c:plotVisOnly val=\"1\"/><c:dispBlanksAs val=\"gap\"/></c:chart></c:chartSpace>").toString();

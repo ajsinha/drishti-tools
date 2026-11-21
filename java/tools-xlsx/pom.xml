@@ -28,4 +28,29 @@
   <dependencies>
     <dependency><groupId>org.apache.poi</groupId><artifactId>poi-ooxml</artifactId><scope>test</scope></dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludes><exclude>**/LargeStreamTest.java</exclude></excludes>
+        </configuration>
+        <executions>
+          <!-- a million cells under a 64 MB heap, in a JVM of its own: the writer must stream -->
+          <execution>
+            <id>large-stream</id>
+            <goals><goal>test</goal></goals>
+            <configuration>
+              <excludes combine.self="override"/>
+              <includes><include>**/LargeStreamTest.java</include></includes>
+              <forkCount>1</forkCount>
+              <reuseForks>false</reuseForks>
+              <argLine>-Xmx64m -Djava.io.tmpdir=${project.build.directory}/tmp</argLine>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
