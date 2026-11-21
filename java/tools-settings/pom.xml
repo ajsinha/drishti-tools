@@ -23,6 +23,9 @@
   </parent>
   <artifactId>tools-settings</artifactId>
   <name>Drishti Tools: tools-settings</name>
+  <properties>
+    <automatic.module.name>com.ash.tools.settings</automatic.module.name>
+  </properties>
   <description>Placeholders, the settings file, setting descriptions, secrets and path anchoring. JDK only.</description>
 
 </project>

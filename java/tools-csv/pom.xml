@@ -23,6 +23,9 @@
   </parent>
   <artifactId>tools-csv</artifactId>
   <name>Drishti Tools: tools-csv</name>
+  <properties>
+    <automatic.module.name>com.ash.tools.csv</automatic.module.name>
+  </properties>
   <description>RFC 4180 CSV: a streaming reader and writer. JDK only; Apache Commons CSV is its test oracle.</description>
 
   <dependencies>

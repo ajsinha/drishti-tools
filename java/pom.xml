@@ -88,6 +88,17 @@
         </configuration>
       </plugin>
       <plugin>
+        <!-- every module jar declares its stable automatic module name (each module sets automatic.module.name to its root package); AutomaticModuleNameTest checks it -->
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkCount>${tools.test.forks}</forkCount>

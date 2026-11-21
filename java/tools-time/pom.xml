@@ -23,6 +23,9 @@
   </parent>
   <artifactId>tools-time</artifactId>
   <name>Drishti Tools: tools-time</name>
+  <properties>
+    <automatic.module.name>com.ash.tools.time</automatic.module.name>
+  </properties>
   <description>The load guard: the date window and the drop share. JDK only.</description>
 
 </project>

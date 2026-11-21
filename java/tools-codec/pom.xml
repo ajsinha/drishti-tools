@@ -23,6 +23,9 @@
   </parent>
   <artifactId>tools-codec</artifactId>
   <name>Drishti Tools: tools-codec</name>
+  <properties>
+    <automatic.module.name>com.ash.tools.codec</automatic.module.name>
+  </properties>
   <description>Message digests (Hashes) and canonical JSON text (CanonicalJson). JDK only; Jackson is its test oracle.</description>
 
   <dependencies>

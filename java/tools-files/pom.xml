@@ -23,6 +23,9 @@
   </parent>
   <artifactId>tools-files</artifactId>
   <name>Drishti Tools: tools-files</name>
+  <properties>
+    <automatic.module.name>com.ash.tools.files</automatic.module.name>
+  </properties>
   <description>Temporary files: one folder per owner under a base, removed on a clean stop. JDK only.</description>
 
 </project>

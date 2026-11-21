@@ -23,6 +23,9 @@
   </parent>
   <artifactId>tools-testkit</artifactId>
   <name>Drishti Tools: tools-testkit</name>
+  <properties>
+    <automatic.module.name>com.ash.tools.testkit</automatic.module.name>
+  </properties>
   <description>Test fixtures: a fake HTTP proxy, a throw-away PKI and TLS files. JDK only.</description>
 
 </project>

@@ -23,6 +23,9 @@
   </parent>
   <artifactId>tools-concurrent</artifactId>
   <name>Drishti Tools: tools-concurrent</name>
+  <properties>
+    <automatic.module.name>com.ash.tools.concurrent</automatic.module.name>
+  </properties>
   <description>One load per key at a time (single flight). JDK only.</description>
 
 </project>
