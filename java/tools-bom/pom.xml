@@ -23,6 +23,10 @@
   <name>Drishti Tools: the bill of materials (one version for every module)</name>
   <description>Import it in a consumer's dependencyManagement (scope import) and name the modules without versions.</description>
 
+  <properties>
+    <tools.java.root>${project.basedir}/..</tools.java.root>
+  </properties>
+
   <dependencyManagement>
     <dependencies>
       <dependency><groupId>com.ash.tools</groupId><artifactId>tools-settings</artifactId><version>${project.version}</version></dependency>

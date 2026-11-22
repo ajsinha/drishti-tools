@@ -43,6 +43,8 @@
   </modules>
 
   <properties>
+    <!-- the product's own root, from this module's folder (a property inherited from the parent would be read from the module's folder too, so every module names its own): ${project.basedir} here, ${project.basedir}/.. in a module -->
+    <tools.java.root>${project.basedir}</tools.java.root>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputTimestamp>2026-11-21T23:43:50Z</project.build.outputTimestamp>
@@ -108,7 +110,7 @@
           <argLine>@{argLine} -Djava.io.tmpdir=${project.build.directory}/tmp</argLine>
           <systemPropertyVariables>
             <jdk.http.auth.tunneling.disabledSchemes></jdk.http.auth.tunneling.disabledSchemes>
-            <tools.repo.root>${project.rootDirectory}/..</tools.repo.root>
+            <tools.repo.root>${tools.java.root}/..</tools.repo.root>
           </systemPropertyVariables>
         </configuration>
       </plugin>

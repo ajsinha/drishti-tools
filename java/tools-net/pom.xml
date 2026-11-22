@@ -24,6 +24,7 @@
   <artifactId>tools-net</artifactId>
   <name>Drishti Tools: tools-net</name>
   <properties>
+    <tools.java.root>${project.basedir}/..</tools.java.root>
     <automatic.module.name>com.ash.tools.net</automatic.module.name>
   </properties>
   <description>TLS (PEM, PKCS12, JKS, the JVM default) and the outbound HTTP proxy, for the JDK's HTTP client. JDK and tools-settings only.</description>

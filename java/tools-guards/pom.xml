@@ -26,6 +26,7 @@
   <description>The repository's guards (published as a test jar: its kit package): API surface additive-only, domain words, product names, dependencies, module rules, header and line cap.</description>
 
   <properties>
+    <tools.java.root>${project.basedir}/..</tools.java.root>
     <automatic.module.name>com.ash.tools.guards</automatic.module.name>
     <tools.api.surface.write>false</tools.api.surface.write>
   </properties>

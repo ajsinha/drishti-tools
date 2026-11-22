@@ -24,6 +24,7 @@
   <artifactId>tools-xlsx</artifactId>
   <name>Drishti Tools: tools-xlsx</name>
   <properties>
+    <tools.java.root>${project.basedir}/..</tools.java.root>
     <automatic.module.name>com.ash.tools.xlsx</automatic.module.name>
   </properties>
   <description>The one .xlsx writer: streaming sheets, styles, formulas, charts, templates. JDK only; Apache POI is its test oracle.</description>
