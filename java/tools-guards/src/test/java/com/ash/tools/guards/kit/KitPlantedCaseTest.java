@@ -39,6 +39,19 @@ class KitPlantedCaseTest {
     }
 
     @Test
+    void theHeaderMarkAndWindowAreTheRepositorysOwn(@TempDir Path repo) throws Exception {
+        Path acme = Files.writeString(repo.resolve("Acme.java"), "// (c) Acme Corp\nclass Acme {}\n");
+        Path late = Files.writeString(repo.resolve("Late.java"), "\n\n\n// (c) Acme Corp\nclass Late {}\n");
+        Path other = Files.writeString(repo.resolve("Other.java"), "// Copyright (c) 2026 Ashutosh Sinha\nclass Other {}\n");
+        List<Path> all = List.of(acme, late, other);
+        assertEquals(List.of("Other.java"), HeaderAndLineCap.withoutHeader(repo, all, "(c) Acme Corp").stream().filter(n -> n.equals("Other.java")).toList());
+        assertEquals(List.of("Late.java", "Other.java"), HeaderAndLineCap.withoutHeader(repo, all, "(c) Acme Corp", 2));
+        assertEquals(List.of("Acme.java", "Late.java"), HeaderAndLineCap.withoutHeader(repo, all));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> HeaderAndLineCap.withoutHeader(repo, all, " "));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> HeaderAndLineCap.withoutHeader(repo, all, "x", 0));
+    }
+
+    @Test
     void theSurfaceListsPublicMembersOnly() {
         var out = new java.util.TreeSet<String>();
         ApiSurface.describe(java.util.ArrayList.class, out);

@@ -3,6 +3,14 @@
 
 Entries are written per release; unreleased work is listed first.
 
+## 1.2.0 (unreleased)
+
+- `tools-codec` `Zips`: deterministic zip writing (`write`, `toBytes`: entries sorted, every timestamp fixed, same content gives the same bytes), a streaming `Writer` (duplicate and unsafe names refused), and reading (`read`, `extract`) that refuses zip-slip names (`safeName`) and stops at a byte cap. JDK only.
+- `tools-net` `HttpClients`: the one `HttpClient` builder, with the proxy (`ProxySettings`) and TLS material (`TlsHttp`) applied and a connect timeout (default 10 s); `forTarget(settings, url, urlSetting)` decides both from settings; no global state.
+- `tools-files` `JvmTemp`: the `-Djava.io.tmpdir` check (`passed`), its warning, `ensureExists`, `sweep` of stale native-library copies in a folder the owner names (name pattern a parameter), and `copyNative` (atomic, removed at exit and with the `TempFolder`).
+- `tools-guards` kit: `HeaderAndLineCap.withoutHeader` takes the header mark (and the line window) as parameters; the one-argument form keeps the old mark.
+- API-surface baselines of the three modules grow (additive).
+
 ## Unreleased
 
 - **IDE launchers follow the platform standard**: one `run-configs/` at the repository root, every launcher named `Tools: <verb> <what>` (IntelliJ folder `Tools`), the same names as the VS Code tasks and launches; missing launchers added; the check `LaunchersTest` (a test) keeps names, files and workspace in step.
