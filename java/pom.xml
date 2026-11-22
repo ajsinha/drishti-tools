@@ -108,7 +108,7 @@
           <argLine>@{argLine} -Djava.io.tmpdir=${project.build.directory}/tmp</argLine>
           <systemPropertyVariables>
             <jdk.http.auth.tunneling.disabledSchemes></jdk.http.auth.tunneling.disabledSchemes>
-            <tools.repo.root>${maven.multiModuleProjectDirectory}/..</tools.repo.root>
+            <tools.repo.root>${project.rootDirectory}/..</tools.repo.root>
           </systemPropertyVariables>
         </configuration>
       </plugin>
