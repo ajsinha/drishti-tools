@@ -47,16 +47,17 @@ Never `install` from a working tree into `~/.m2`.
 
 ## IntelliJ IDEA
 
-Open `java/pom.xml` as a project. Set the project SDK to JDK 21 and **Settings, Build Tools, Maven, Runner, JRE: Use Project JDK**.
-Run configurations are in `java/run-configs/`, folder **Tools**:
+Open the repository root as a project and link `java/pom.xml` in the Maven tool window. Set the project SDK to JDK 21 and **Settings, Build Tools, Maven, Runner, JRE: Use Project JDK**.
+Run configurations are in `run-configs/` at the repository root, folder **Tools** (open the repository root as the project and link `java/pom.xml` in the Maven tool window):
 
 | Configuration | Runs |
 |---|---|
-| **Tools build all** | the build without tests |
-| **Tools test** | the full build with every test and guard |
-| **Tools API surface rewrite** | the build with `-Dtools.api.surface.write=true`, after a reviewed API addition |
-| **Tools xlsx with LibreOffice** | the xlsx module with the LibreOffice conversion test |
-| **Tools install release** | `install`; on a release tag only |
+| **Tools: build all** | the build without tests |
+| **Tools: test** | the full build with every test and guard |
+| **Tools: maintain API surface (rewrite)** | the build with `-Dtools.api.surface.write=true`, after a reviewed API addition |
+| **Tools: check guards** | only the guards module and what it needs (the launchers are checked too) |
+| **Tools: test xlsx with LibreOffice** | the xlsx module with the LibreOffice conversion test |
+| **Tools: install release (tag only)** | `install`; on a release tag only |
 
 Any test class runs from its gutter icon. IntelliJ Community has no Node support; nothing here needs it.
 

@@ -2,11 +2,12 @@
   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
   Drishti Tools. Proprietary: see LICENSE.
 
-  Tools install release: ONLY on a release tag: installs the jars into the local Maven repository for the consumers.
+  Tools: check guards: only the guards module and what it needs (API surface, dependencies, module names, launchers).
+  Use it when: a quick check of the rules.
   Shared, so it is in git: copy the configuration (Ctrl+D) to change it; a pull overwrites this file.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Tools install release" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
+  <configuration default="false" name="Tools: check guards" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings">
@@ -22,16 +23,18 @@
           <option name="goals">
             <list>
               <option value="clean" />
-              <option value="install" />
-              <option value="-DskipTests" />
+              <option value="verify" />
+              <option value="-pl" />
+              <option value="tools-guards" />
+              <option value="-am" />
             </list>
           </option>
-          <option name="pomFileName" />
+          <option name="pomFileName" value="" />
           <option name="profilesMap">
             <map />
           </option>
           <option name="resolveToWorkspace" value="false" />
-          <option name="workingDirPath" value="$PROJECT_DIR$" />
+          <option name="workingDirPath" value="$PROJECT_DIR$/java" />
         </MavenRunnerParameters>
       </option>
     </MavenSettings>

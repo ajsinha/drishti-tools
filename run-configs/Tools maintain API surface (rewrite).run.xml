@@ -2,11 +2,12 @@
   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
   Drishti Tools. Proprietary: see LICENSE.
 
-  Tools build all: every module compiled and packaged, no tests (seconds).
+  Tools: maintain API surface (rewrite): verify with -Dtools.api.surface.write=true: rewrites java/api-surface.txt from the code.
+  Use it when: you changed a public API on purpose; review the diff.
   Shared, so it is in git: copy the configuration (Ctrl+D) to change it; a pull overwrites this file.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Tools build all" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
+  <configuration default="false" name="Tools: maintain API surface (rewrite)" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings">
@@ -23,15 +24,15 @@
             <list>
               <option value="clean" />
               <option value="verify" />
-              <option value="-DskipTests" />
+              <option value="-Dtools.api.surface.write=true" />
             </list>
           </option>
-          <option name="pomFileName" />
+          <option name="pomFileName" value="" />
           <option name="profilesMap">
             <map />
           </option>
           <option name="resolveToWorkspace" value="false" />
-          <option name="workingDirPath" value="$PROJECT_DIR$" />
+          <option name="workingDirPath" value="$PROJECT_DIR$/java" />
         </MavenRunnerParameters>
       </option>
     </MavenSettings>

@@ -2,11 +2,12 @@
   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
   Drishti Tools. Proprietary: see LICENSE.
 
-  Tools xlsx with LibreOffice: tools-xlsx's tests plus a LibreOffice conversion of the test workbooks (LibreOffice installed; Windows: add -Dtools.test.soffice.path=...).
+  Tools: test: the full build with the unit tests and the guards.
+  Use it when: before a commit or a push.
   Shared, so it is in git: copy the configuration (Ctrl+D) to change it; a pull overwrites this file.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Tools xlsx with LibreOffice" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
+  <configuration default="false" name="Tools: test" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings">
@@ -23,18 +24,14 @@
             <list>
               <option value="clean" />
               <option value="verify" />
-              <option value="-pl" />
-              <option value="tools-xlsx" />
-              <option value="-am" />
-              <option value="-Dtools.test.soffice=true" />
             </list>
           </option>
-          <option name="pomFileName" />
+          <option name="pomFileName" value="" />
           <option name="profilesMap">
             <map />
           </option>
           <option name="resolveToWorkspace" value="false" />
-          <option name="workingDirPath" value="$PROJECT_DIR$" />
+          <option name="workingDirPath" value="$PROJECT_DIR$/java" />
         </MavenRunnerParameters>
       </option>
     </MavenSettings>

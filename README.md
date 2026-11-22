@@ -79,7 +79,7 @@ git checkout vX.Y.Z && cd java && ./mvnw clean install -DskipTests     # install
 
 ## Build and run in the IDE
 
-JDK 21 as the project SDK. **IntelliJ IDEA**: open `java/pom.xml`; run configurations are in `java/run-configs/` (folder **Tools**).
+JDK 21 as the project SDK. **IntelliJ IDEA**: open the repository root and link `java/pom.xml`; the run configurations are in `run-configs/` (folder **Tools**, names `Tools: <verb> <what>`: build all, test, check guards, test xlsx with LibreOffice, maintain API surface (rewrite), install release (tag only)).
 **VS Code**: open `drishti-tools.code-workspace`; the same tasks. **PyCharm** is not needed (no Python here). The modules are libraries, so
 there is no program to run. Steps, the Windows `PKIX` fix and the scratch-repository build: [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md).
 

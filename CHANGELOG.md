@@ -5,6 +5,8 @@ Entries are written per release; unreleased work is listed first.
 
 ## Unreleased
 
+- **IDE launchers follow the platform standard**: one `run-configs/` at the repository root, every launcher named `Tools: <verb> <what>` (IntelliJ folder `Tools`), the same names as the VS Code tasks and launches; missing launchers added; the check `LaunchersTest` (a test) keeps names, files and workspace in step.
+
 ## 1.1.0 (2026-11-21)
 
 - Automatic-Module-Name on every module (com.ash.tools.<module>)

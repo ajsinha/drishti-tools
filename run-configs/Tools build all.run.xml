@@ -2,11 +2,12 @@
   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
   Drishti Tools. Proprietary: see LICENSE.
 
-  Tools test: the full build with every test and guard (about half a minute). Use it before a commit or a push.
+  Tools: build all: the reactor's build without the tests: every module compiles, the jars are packaged and the guards run.
+  Use it when: after a clone or a pull, before running the tests.
   Shared, so it is in git: copy the configuration (Ctrl+D) to change it; a pull overwrites this file.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Tools test" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
+  <configuration default="false" name="Tools: build all" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings">
@@ -23,14 +24,15 @@
             <list>
               <option value="clean" />
               <option value="verify" />
+              <option value="-DskipTests" />
             </list>
           </option>
-          <option name="pomFileName" />
+          <option name="pomFileName" value="" />
           <option name="profilesMap">
             <map />
           </option>
           <option name="resolveToWorkspace" value="false" />
-          <option name="workingDirPath" value="$PROJECT_DIR$" />
+          <option name="workingDirPath" value="$PROJECT_DIR$/java" />
         </MavenRunnerParameters>
       </option>
     </MavenSettings>
