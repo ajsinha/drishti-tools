@@ -15,7 +15,11 @@ docs: [docs/BUILD_AND_IDE.md, docs/guides/, docs/ORIGINS.md]
 licence: proprietary (LICENSE)
 ---
 
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/drishti_tools-logo.svg"><img src="brand/drishti_tools-logo-light.svg" alt="Drishti Tools" width="330"></picture></p>
+
 # Drishti Tools
+
+<p align="center"><b>Fix it once. Use it everywhere.</b></p>
 
 **Shared, domain-free Java utilities for the Drishti family.**
 
