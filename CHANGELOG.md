@@ -5,6 +5,10 @@ Entries are written per release; unreleased work is listed first.
 
 ## Unreleased
 
+## 1.1.1 (2026-11-24)
+
+- Settings files saved with a UTF-8 byte-order mark (Windows Notepad) are read correctly
+
 ## 1.1.0 (2026-11-21)
 
 - Automatic-Module-Name on every module (com.ash.tools.<module>)

@@ -42,6 +42,13 @@ class SettingsFileTest {
     }
 
     @Test
+    void aLeadingUtf8ByteOrderMarkIsIgnored(@TempDir Path dir) throws Exception {
+        Path f = dir.resolve("bom.ini");
+        Files.write(f, new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF, 's', 'f', '.', 't', 'e', 's', 't', '.', 'a', '=', '/', 'x', '\n'});
+        assertThat(SettingsFile.read(f.toString())).containsEntry("sf.test.a", "/x");
+    }
+
+    @Test
     void entriesBecomePropertiesAndSectionsAndCommentsAreIgnored(@TempDir Path dir) throws Exception {
         System.setProperty(PROPERTY, write(dir, "# a comment\n; another\n[paths]\nsf.test.a = /x/y\n\n[more]\nsf.test.b=1=2\n").toString());
         assertThat(SettingsFile.applyFrom(PROPERTY)).containsExactly("sf.test.a", "sf.test.b");

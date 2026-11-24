@@ -176,6 +176,7 @@ public final class SettingsFile {
         } catch (IOException e) {
             throw new IllegalStateException(property + ": cannot read " + file + ": " + e.getMessage(), e);
         }
+        if (!lines.isEmpty() && lines.get(0).startsWith("\uFEFF")) lines.set(0, lines.get(0).substring(1)); // UTF-8 byte-order mark (Windows Notepad)
         return parse(lines, file.toString());
     }
 
