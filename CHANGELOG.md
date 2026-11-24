@@ -7,6 +7,7 @@ Entries are written per release; unreleased work is listed first.
 
 ## 1.1.1 (2026-11-24)
 
+- `mvnw` on Linux and macOS works in a folder whose path holds a space (Maven's temporary folder then lives in the system's temporary folder).
 - Settings files saved with a UTF-8 byte-order mark (Windows Notepad) are read correctly
 
 ## 1.1.0 (2026-11-21)

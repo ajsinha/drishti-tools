@@ -155,6 +155,8 @@ exec_maven() {
   *-Djava.io.tmpdir=*) ;;
   *)
     _mvnw_tmp="${TOOLS_MAVEN_TMP:-$(cd "$(dirname "$0")" && pwd)/build-tmp/maven}"
+    # Maven splits MAVEN_OPTS at spaces: a folder whose path holds a space gets a space-free temporary folder of the system's instead
+    case "$_mvnw_tmp" in *" "*) _mvnw_tmp="${TMPDIR:-/tmp}/drishti-tools-maven-$(id -u)" ;; esac
     mkdir -p "$_mvnw_tmp" 2>/dev/null && MAVEN_OPTS="-Djava.io.tmpdir=$_mvnw_tmp ${MAVEN_OPTS-}" && export MAVEN_OPTS
     ;;
   esac
