@@ -4,7 +4,7 @@ name: Drishti Tools
 summary: >-
   Shared, domain-free Java utilities for the Drishti family: settings and placeholders, TLS and the outbound proxy, single flight,
   the load guard, the one .xlsx writer, and test fixtures. Written once, fixed in one place, used by Drishti and Drishti Lake.
-status: built and tested on its own; consumers build against a released tag installed in ~/.m2
+status: built and tested on its own; the platform build installs it into the Maven repository for Drishti
 coordinates: {groupId: com.ash.tools, package: com.ash.tools.<module>, bom: com.ash.tools:tools-bom}
 java: 21
 modules: [tools-settings, tools-net, tools-concurrent, tools-time, tools-xlsx, tools-codec, tools-csv, tools-files, tools-testkit, tools-guards]
@@ -67,21 +67,41 @@ Each module has a guide with a tutorial that was run: see Documents below.
 A new module needs two consumers or the owner's word, is domain-free, and takes the standard library first, a thin wrapper second,
 its own code last and then with an oracle test.
 
-## Install and build
+## Where it fits the Drishti platform
 
-The family installs in this order: **Rachana (tag) -> Drishti Tools (tag) -> Drishti Lake (tag) -> Drishti**. A consumer builds against a
-released tag, installed into `~/.m2/repository/com/ash/tools/` (Windows `C:\Users\<user>\.m2\repository\com\ash\tools\`), never against a branch.
+Drishti Tools is the first product of the platform build. The platform's `build_all.py` (and its IntelliJ launcher `platform-clean-install`)
+builds the products in order, **Drishti Tools -> Drishti Rachana -> Drishti Lake -> Drishti**, and installs each one's jars into the local
+Maven repository (`~/.m2/repository/com/ash/tools/`, Windows `C:\Users\<user>\.m2\repository\com\ash\tools\`) before the next builds against
+them. Drishti Rachana's server and Drishti Lake use Tools; Drishti Elements (JavaScript) does not. A consumer always builds against a
+released tag, never a branch.
 
-```text
-cd java && ./mvnw clean verify                          # JDK 21 or later; every module, test and guard; about half a minute
-git checkout vX.Y.Z && cd java && ./mvnw clean install -DskipTests     # install a release (tag only)
-```
+## Requirements
+
+JDK 21 or later (`java -version`) and Git. Maven is not installed: the wrapper `java/mvnw` (Windows `java\mvnw.cmd`) downloads it. There is no
+Python in this repository. LibreOffice is optional (one `tools-xlsx` conversion test).
+
+## Build and test on its own
+
+| | Linux / macOS | Windows |
+|---|---|---|
+| every module, test and guard (about half a minute) | `cd java && ./mvnw clean verify` | `cd java` then `mvnw.cmd clean verify` |
+| compile and package only | `./mvnw clean verify -DskipTests` | `mvnw.cmd clean verify -DskipTests` |
+| one module and what it needs | `./mvnw clean verify -pl tools-time -am` | `mvnw.cmd clean verify -pl tools-time -am` |
+| install a release (on its tag only) | `git checkout vX.Y.Z && cd java && ./mvnw clean install -DskipTests` | `mvnw.cmd clean install -DskipTests` |
+
+Never `install` from a working tree into `~/.m2`; the scratch-repository build for a consumer is in [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md).
 
 ## Build and run in the IDE
 
-JDK 21 as the project SDK. **IntelliJ IDEA**: open `java/pom.xml`; run configurations are in `java/run-configs/` (folders **IntelliJ-tools-build**, **-test**, **-install**, **-check**).
-**VS Code**: open `drishti-tools.code-workspace`; the same tasks. **PyCharm** is not needed (no Python here). The modules are libraries, so
-there is no program to run. Steps, the Windows `PKIX` fix and the scratch-repository build: [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md).
+The launchers are checked in, in `java/run-configs/`, named `Tools: <verb> <what>`. The modules are libraries: there is no program to run.
+
+| IDE | Open | Launcher groups |
+|---|---|---|
+| **IntelliJ IDEA** (Community is enough) | `java/pom.xml` as a project, JDK 21 as the project SDK | **IntelliJ-tools-build** (build all), **IntelliJ-tools-test** (test; xlsx with LibreOffice), **IntelliJ-tools-check** (API surface rewrite), **IntelliJ-tools-install** (install release, tag only) |
+| **PyCharm** | not needed: no Python here | none |
+| **VS Code** | `drishti-tools.code-workspace` (File, Open Workspace from File) | the same five tasks; tests from the Testing view |
+
+On a company network that re-signs HTTPS, the Windows `PKIX path building failed` fix is in [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md).
 
 ## Documents
 

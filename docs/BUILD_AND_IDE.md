@@ -27,7 +27,7 @@ when you want another place). `tools-xlsx` also runs a million cells under a 64 
 
 ## Install order and where the artifacts go
 
-The Drishti family installs in this order: **Rachana (tag) -> Drishti Tools (tag) -> Drishti Lake (tag) -> Drishti**. A consumer builds
+The Drishti family installs in this order: **Drishti Tools -> Drishti Rachana -> Drishti Lake -> Drishti** (the order of the platform's `build_all.py` and its IntelliJ launcher `platform-clean-install`; each from its release tag). A consumer builds
 against a *released* tag, never a branch:
 
 ```text
