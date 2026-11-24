@@ -48,7 +48,7 @@ Never `install` from a working tree into `~/.m2`.
 ## IntelliJ IDEA
 
 Open `java/pom.xml` as a project. Set the project SDK to JDK 21 and **Settings, Build Tools, Maven, Runner, JRE: Use Project JDK**.
-Run configurations are in `java/run-configs/`, folder **Tools**:
+Run configurations are in `java/run-configs/`, folders **IntelliJ-tools-build**, **-test**, **-install** and **-check**:
 
 | Configuration | Runs |
 |---|---|

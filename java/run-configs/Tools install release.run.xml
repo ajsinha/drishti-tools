@@ -6,7 +6,7 @@
   Shared, so it is in git: copy the configuration (Ctrl+D) to change it; a pull overwrites this file.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Tools install release" type="MavenRunConfiguration" factoryName="Maven" folderName="Tools">
+  <configuration default="false" name="Tools install release" type="MavenRunConfiguration" factoryName="Maven" folderName="IntelliJ-tools-install">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings">
