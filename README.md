@@ -11,7 +11,7 @@ modules: [tools-settings, tools-net, tools-concurrent, tools-time, tools-xlsx, t
 depends-on: [the JDK only; tools-net uses tools-settings; tests use JUnit, AssertJ and Apache POI]
 commands: {build: "cd java && ./mvnw clean verify"}
 consumers: [Drishti Lake, Drishti]
-docs: [docs/BUILD_AND_IDE.md, docs/guides/, docs/ORIGINS.md]
+docs: [docs/BUILD_AND_IDE.md, docs/GUIDE.md]
 licence: proprietary (LICENSE)
 ---
 
@@ -50,7 +50,7 @@ A consumer imports the BOM and names modules without versions:
 </dependencies></dependencyManagement>
 ```
 
-Each module has a guide with a tutorial that was run: see Documents below.
+Each module has a section with a tutorial that was run in [docs/GUIDE.md](docs/GUIDE.md).
 
 ## The rules (tools-guards)
 
@@ -62,7 +62,8 @@ Each module has a guide with a tutorial that was run: see Documents below.
 | `DependenciesTest` | each module's compile and runtime dependencies are its line in `dependencies.txt` (JDK-only modules: none) |
 | `ModuleRulesTest` | one package per module; one module uses another only along a declared edge; no `internal` package across modules; no cycle |
 | `LicenceHeaderAndLineCapTest` | the copyright header on every source; 2,500 lines at most (one constant) |
-| `ExemptionsOnlyShrinkTest` | the guards' exemptions (none at 1.0.0) only shrink |
+| `ExemptionsOnlyShrinkTest` | the guards' exemptions only shrink |
+| `AutomaticModuleNameTest` | every module declares `Automatic-Module-Name` `com.ash.tools.<module>` |
 
 A new module needs two consumers or the owner's word, is domain-free, and takes the standard library first, a thin wrapper second,
 its own code last and then with an oracle test.
@@ -75,47 +76,17 @@ Maven repository (`~/.m2/repository/com/ash/tools/`, Windows `C:\Users\<user>\.m
 them. Drishti Rachana's server and Drishti Lake use Tools; Drishti Elements (JavaScript) does not. A consumer always builds against a
 released tag, never a branch.
 
-## Requirements
+## Build and test
 
-JDK 21 or later (`java -version`) and Git. Maven is not installed: the wrapper `java/mvnw` (Windows `java\mvnw.cmd`) downloads it. There is no
-Python in this repository. LibreOffice is optional (one `tools-xlsx` conversion test).
-
-## Build and test on its own
-
-| | Linux / macOS | Windows |
-|---|---|---|
-| every module, test and guard (about half a minute) | `cd java && ./mvnw clean verify` | `cd java` then `mvnw.cmd clean verify` |
-| compile and package only | `./mvnw clean verify -DskipTests` | `mvnw.cmd clean verify -DskipTests` |
-| one module and what it needs | `./mvnw clean verify -pl tools-time -am` | `mvnw.cmd clean verify -pl tools-time -am` |
-| install a release (on its tag only) | `git checkout vX.Y.Z && cd java && ./mvnw clean install -DskipTests` | `mvnw.cmd clean install -DskipTests` |
-
-Never `install` from a working tree into `~/.m2`; the scratch-repository build for a consumer is in [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md).
-
-## Build and run in the IDE
-
-The launchers are checked in, in `java/run-configs/`, named `Tools: <verb> <what>`. The modules are libraries: there is no program to run.
-
-| IDE | Open | Launcher groups |
-|---|---|---|
-| **IntelliJ IDEA** (Community is enough) | `java/pom.xml` as a project, JDK 21 as the project SDK | **IntelliJ-tools-build** (build all), **IntelliJ-tools-test** (test; xlsx with LibreOffice), **IntelliJ-tools-check** (API surface rewrite), **IntelliJ-tools-install** (install release, tag only) |
-| **PyCharm** | not needed: no Python here | none |
-| **VS Code** | `drishti-tools.code-workspace` (File, Open Workspace from File) | the same five tasks; tests from the Testing view |
-
-On a company network that re-signs HTTPS, the Windows `PKIX path building failed` fix is in [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md).
+JDK 21 or later and Git; Maven is not installed (the wrapper `java/mvnw`, Windows `java\mvnw.cmd`, downloads it); no Python here. In `java/`:
+`./mvnw clean verify` builds every module and runs every test and guard (about half a minute). Install from a release tag, the scratch
+repository for a consumer, IntelliJ and VS Code launchers (`java/run-configs/`, `drishti-tools.code-workspace`) and the Windows
+`PKIX path building failed` fix are in [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md). The modules are libraries: there is no program to run.
 
 ## Documents
 
 | Document | What |
 |---|---|
-| [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md) | prepare, build, install from a tag, IntelliJ, VS Code, Windows, the guards |
-| [docs/guides/SETTINGS.md](docs/guides/SETTINGS.md) | `tools-settings`: placeholders, settings files, secrets, path anchors (with a tutorial) |
-| [docs/guides/NET.md](docs/guides/NET.md) | `tools-net`: TLS and the outbound proxy (two tutorials) |
-| [docs/guides/CONCURRENT.md](docs/guides/CONCURRENT.md) | `tools-concurrent`: `SingleFlight` |
-| [docs/guides/TIME.md](docs/guides/TIME.md) | `tools-time`: `LoadGuard` |
-| [docs/guides/XLSX.md](docs/guides/XLSX.md) | `tools-xlsx`: the one workbook writer |
-| [docs/guides/CODEC.md](docs/guides/CODEC.md) | `tools-codec`: `Hashes`, `CanonicalJson` |
-| [docs/guides/CSV.md](docs/guides/CSV.md) | `tools-csv`: RFC 4180 reader and writer |
-| [docs/guides/FILES.md](docs/guides/FILES.md) | `tools-files`: `TempFolder` |
-| [docs/guides/TESTKIT.md](docs/guides/TESTKIT.md) | `tools-testkit`: `FakeProxy`, `TestPki`, `TlsFixture` |
-| [docs/ORIGINS.md](docs/ORIGINS.md) | design and origin: where each class came from, every difference between the copies and how it was resolved |
+| [docs/GUIDE.md](docs/GUIDE.md) | one section per module, each with a tutorial that was run |
+| [docs/BUILD_AND_IDE.md](docs/BUILD_AND_IDE.md) | prepare, build, install from a tag, IntelliJ, VS Code, Windows |
 | [CHANGELOG.md](CHANGELOG.md) | what changed when |

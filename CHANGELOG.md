@@ -13,7 +13,7 @@ Entries are written per release; unreleased work is listed first.
 
 - The repository: Maven reactor `com.ash.tools` (JDK 21, `mvnw`), `tools-bom`, the guards (`tools-guards`), LICENSE, IDE launchers.
 - `tools-settings`, `tools-net`, `tools-concurrent`, `tools-time`, `tools-testkit`: from Drishti `main` `9ce7c3170` with history,
-  compared with Lake's copies; every place a product's name was written is a parameter (docs/ORIGINS.md).
+  compared with Lake's copies; every place a product's name was written is a parameter (its design notes are in the git history).
 - `tools-settings`: `PathAnchors` (new), `SettingException` (new; `Secrets` throws it, TLS rewraps it as before).
 - `tools-xlsx`: one streaming writer replacing Drishti's four (the exports' `XlsxWriter` with charts and formulas, the pivot
   export's `Xlsx`, the playgrounds' `WorkbookStream`/`SheetStream`, the capacity workbook), proven with Apache POI as the oracle.

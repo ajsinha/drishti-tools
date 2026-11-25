@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 /**
  * The TLS settings of one connector, read from its settings under a prefix (normally {@code tls.}). Every connector reads
- * the same keys, so an operator learns them once ({@code docs/guides/DATA_GUIDE.md section 10}).
+ * the same keys, so an operator learns them once ({@code docs/GUIDE.md, tools-net}).
  *
  * <p>Keys (all optional; {@code enabled} defaults to false):
  * <ul>

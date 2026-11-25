@@ -85,9 +85,5 @@ In IntelliJ: **Maven, Runner, VM Options** and **Maven, Importing, VM options fo
 `%USERPROFILE%\.m2\settings.xml`, or the root added to the JDK with `keytool -importcert -cacerts`. No executable has to be placed on
 the machine: the build is Java only.
 
-## The repository's rules, as tests
-
-`tools-guards` runs with the build: the API surface of each module only grows (`api-surface.txt`); no domain word and no product name in
-main sources; each module's dependencies are its line of `dependencies.txt`; one package per module and no cycle; the copyright header
-on every source and 2,500 lines at most per file. A new public method updates `api-surface.txt` in the same commit (**Tools API surface
-rewrite**).
+The repository's rules (`tools-guards`) run with the build and are listed in [README.md](../README.md); a new public method updates
+`api-surface.txt` in the same commit (**Tools API surface rewrite**).
